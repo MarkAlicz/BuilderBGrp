@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tier-2 Interweave — Second-Degree Affiliations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E1417;--ground:#131C21;--panel:#18232A;--rule:#26343D;
+  --bone:#E8E4D9;--muted:#8093A0;--brass:#C9A227;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ink);color:var(--bone);font-family:"IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1500px;margin:0 auto;padding:26px 20px 50px}
+header{border-bottom:1px solid var(--rule);padding-bottom:16px;margin-bottom:18px}
+h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(24px,3.6vw,40px);letter-spacing:-.025em;line-height:1;margin:0 0 9px}
+h1 em{font-style:normal;color:var(--brass)}
+.deck{color:var(--muted);font-size:13.5px;line-height:1.55;max-width:74ch;margin:0}
+.warn{margin-top:12px;border-left:2px solid var(--brass);padding:8px 12px;background:#1A1608;color:#E5D9A8;font-size:12px;line-height:1.5;max-width:80ch}
+.tally{display:flex;flex-wrap:wrap;margin-top:14px;font-family:"IBM Plex Mono",monospace}
+.tally div{padding-right:22px;margin-right:22px;border-right:1px solid var(--rule)}
+.tally div:last-child{border-right:0}
+.tally b{display:block;font-size:21px;font-weight:600;letter-spacing:-.02em}
+.tally span{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.tabs{display:inline-flex;border:1px solid var(--rule)}
+.tabs button{background:transparent;border:0;border-right:1px solid var(--rule);color:var(--muted);
+ font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;padding:8px 13px;cursor:pointer}
+.tabs button:last-child{border-right:0}
+.tabs button:hover{color:var(--bone)}
+.tabs button[aria-pressed="true"]{background:var(--brass);color:var(--ink);font-weight:600}
+input[type=search]{flex:1 1 190px;min-width:160px;background:var(--ground);border:1px solid var(--rule);color:var(--bone);font-family:"IBM Plex Mono",monospace;font-size:12px;padding:8px 11px}
+.ghost{background:transparent;border:1px solid var(--rule);color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;padding:8px 12px;cursor:pointer}
+.ghost:hover{color:var(--bone);border-color:var(--bone)}
+button:focus-visible,input:focus-visible,li:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+label.sw{display:inline-flex;align-items:center;gap:6px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted);cursor:pointer}
+label.sw input{accent-color:var(--brass)}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:16px;align-items:start}
+@media(max-width:1020px){.grid{grid-template-columns:1fr}}
+.stage{position:relative;background:var(--ground);border:1px solid var(--rule);height:76vh;min-height:520px;overflow:hidden;cursor:grab}
+.stage.drag{cursor:grabbing}
+svg{display:block;width:100%;height:100%}
+.tip{position:absolute;pointer-events:none;z-index:9;opacity:0;transition:opacity .1s;background:#080C0E;border:1px solid var(--brass);padding:8px 10px;max-width:290px;font-size:11.5px;line-height:1.45;box-shadow:0 8px 26px rgba(0,0,0,.7)}
+.tip b{font-family:"Space Grotesk",sans-serif;display:block;font-size:13px;margin-bottom:2px}
+.tip s{text-decoration:none;color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:10px;display:block;margin-top:3px}
+.hud{position:absolute;left:10px;bottom:10px;font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--muted);pointer-events:none}
+
+.side{background:var(--ground);border:1px solid var(--rule);padding:15px}
+.side h2{font-family:"Space Grotesk",sans-serif;font-size:17px;margin:0 0 3px;letter-spacing:-.01em;line-height:1.2}
+.meta{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.kicker{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);border-bottom:1px solid var(--rule);padding-bottom:5px;margin:16px 0 9px}
+.kicker:first-child{margin-top:0}
+ul.plain{list-style:none;margin:0;padding:0;max-height:280px;overflow:auto}
+ul.plain li{padding:5px 6px;font-size:12px;line-height:1.35;cursor:pointer;border-left:2px solid transparent;display:flex;gap:7px;align-items:baseline}
+ul.plain li:hover{background:var(--panel)}
+ul.plain li.cur{background:var(--panel);border-left-color:var(--brass)}
+ul.plain li em{font-style:normal;color:var(--muted);font-size:10.5px}
+ul.plain li b{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--brass);flex:none;margin-left:auto}
+.dot{width:8px;height:8px;flex:none;border-radius:50%;margin-top:4px}
+.sq{width:8px;height:8px;flex:none;margin-top:4px;transform:rotate(45deg)}
+.edgeline{font-size:11.5px;line-height:1.5;padding:5px 0;border-bottom:1px solid #1D2830;cursor:pointer}
+.edgeline:hover{color:#fff}
+.edgeline u{text-decoration:none;font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--brass);display:block}
+.edgeline s{text-decoration:none;color:var(--muted);font-size:10.5px;display:block}
+.c1{color:#FF8A3D}
+.empty{color:var(--muted);font-size:12.5px;line-height:1.55}
+footer{margin-top:30px;padding-top:14px;border-top:1px solid var(--rule);color:var(--muted);font-size:11.5px;line-height:1.65;max-width:88ch}
+footer b{color:var(--bone)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Tier-2 interweave — <em>where the roster actually overlaps</em></h1>
+  <p class="deck">Primary affiliations put 128 people in 128 chairs. Second-degree ties — prior offices,
+  board seats, ownership, shared newsrooms and lecture halls, one marriage — put many of them in the
+  same room twice. Institutions are squares, people are circles, and an institution touched by two or
+  more participants is a bridge.</p>
+  <div class="warn"><b>Provenance.</b> Tier-1 (person to current organisation) is verbatim from your
+  document. Tier-2 ties, ownership chains and financial figures are from my own knowledge, cutoff
+  mid-2026, graded <b>A</b> (settled public record), <b>B</b> (well documented, re-check against a
+  current filing) or <b>C</b> (indicative order of magnitude only). Market caps and private valuations
+  move fast; treat them as scale, not price.<br><br>
+  <b>On personal wealth.</b> A figure appears only where one is actually published or directly derivable
+  from a disclosed stake or transaction. That covers 20 of the 128. For the rest &mdash; ministers,
+  editors, academics, and serving intelligence and military officers &mdash; no credible figure exists,
+  and rather than generate a plausible-looking number attached to a real person's name, the field is
+  left empty and the reason is stated on the node. Controlled institutional mass is given instead, and
+  is the more useful quantity here in any case.</div>
+  <div class="tally">
+    <div><b id="tN">·</b><span>Nodes</span></div>
+    <div><b id="tE">·</b><span>Edges</span></div>
+    <div><b id="tB">·</b><span>Bridge institutions</span></div>
+    <div><b id="tC">·</b><span>Components</span></div>
+    <div><b id="tL">·</b><span>Largest component</span></div>
+    <div><b id="tM">·</b><span>Institutional mass in view</span></div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="tabs" id="modes">
+    <button data-m="bridge" aria-pressed="true">Bridges only</button>
+    <button data-m="full" aria-pressed="false">Full graph</button>
+    <button data-m="tier2" aria-pressed="false">Tier-2 only</button>
+    <button data-m="capital" aria-pressed="false">Capital &amp; ownership</button>
+  </div>
+  <div class="tabs" id="grades">
+    <button data-g="B" aria-pressed="true">Grade A+B</button>
+    <button data-g="A" aria-pressed="false">Grade A only</button>
+  </div>
+  <input type="search" id="q" placeholder="Search person or institution" aria-label="Search">
+  <label class="sw"><input type="checkbox" id="lbl" checked> Labels</label>
+  <button class="ghost" id="reset">Clear</button>
+</div>
+
+<div class="grid">
+  <div class="stage" id="stage">
+    <svg id="svg" role="img" aria-label="Second-degree affiliation network"></svg>
+    <div class="tip" id="tip"></div>
+    <div class="hud" id="hud">drag background to pan · scroll to zoom · drag a node to pin it</div>
+  </div>
+  <aside class="side" id="side"></aside>
+</div>
+
+<footer>
+  <b>What the graph is and isn't.</b> An edge means a shared institution, not a shared intention. Two
+  people on the same alumni node have a documented path between them and nothing more. <b>Betweenness</b>
+  is computed with Brandes' algorithm over the filtered graph and identifies structural brokers — nodes
+  that many shortest paths must traverse — which is a property of this dataset's boundary, not of the
+  world. Adding one unrecorded board seat can reorder the top ten. Treat the ranking as a prompt for
+  where to look next, not a finding.
+</footer>
+</div>
+
+<script>
+/* ═══ palette ═══ */
+const KC={gov:'#6D8CFF',def:'#FF8A3D',dind:'#FF5A5A',mult:'#2BD9A8',fin:'#FFC53D',tech:'#A98BFF',
+ nrg:'#57D96B',ind:'#3FC7E0',med:'#FF6FA5',acad:'#C99A6B',hlth:'#A8D93F',cult:'#E07BFF',roy:'#9AA7B0'};
+const KL={gov:'Government',def:'Defence & Intelligence',dind:'Defence industry',mult:'Multilateral',
+ fin:'Finance',tech:'Technology',nrg:'Energy',ind:'Industrials',med:'Media',acad:'Academia & think tanks',
+ hlth:'Health',cult:'Culture & civil society',roy:'Royal'};
+const CN={USA:'United States',GBR:'United Kingdom',FRA:'France',DEU:'Germany',INT:'International',
+ ITA:'Italy',NLD:'Netherlands',IRL:'Ireland',TUR:'Türkiye',SWE:'Sweden',POL:'Poland',FIN:'Finland',
+ ESP:'Spain',CHE:'Switzerland',DNK:'Denmark',BEL:'Belgium',AUT:'Austria',PRT:'Portugal',NOR:'Norway',
+ GRC:'Greece',UKR:'Ukraine',CAN:'Canada',GRL:'Greenland',EU:'European Union',LTU:'Lithuania'};
+
+/* ═══ tier 1 : person, country, title, organisation, sector ═══ */
+const P=[
+['Stacey Abrams','USA','CEO','Sage Works Production','med'],
+['Marco Alverà','ITA','Co-Founder / CEO','zhero / TES','nrg'],
+['Anne Applebaum','USA','Staff Writer','The Atlantic','med'],
+['Murray Auchincloss','GBR','Former CEO','BP plc','nrg'],
+['José Manuel Barroso','PRT','Chair, International Advisors','Goldman Sachs','fin'],
+['Adam Bartosiewicz','POL','Vice President','WB Group','dind'],
+['Valérie Baudson','FRA','CEO','Amundi SA','fin'],
+['Caroline Berg','SWE','CEO','Axel Johnson','ind'],
+['Fatih Birol','INT','Executive Director','International Energy Agency','mult'],
+['Harold Boël','BEL','CEO','Sofina','fin'],
+['Peter Bosek','AUT','CEO & Chief Retail Officer','Erste Group Bank','fin'],
+['Albert Bourla','USA','Chair and CEO','Pfizer','hlth'],
+['Helene Budliger','CHE','State Secretary for Economic Affairs','Government of Switzerland','gov'],
+['Douglas Burgum','USA','Secretary of the Interior','US Government','gov'],
+['Roland Busch','DEU','President and CEO','Siemens','ind'],
+['Nadia Calviño','INT','President','European Investment Bank','mult'],
+['Aaro Cantell','FIN','Chair','Normet Group','ind'],
+['Henri de Castries','FRA','President','Institut Montaigne','acad'],
+['Camilla Cavendish','GBR','Member','House of Lords','gov'],
+['Jack Chambers','IRL','Minister for Public Expenditure & Digitalisation','Government of Ireland','gov'],
+['Jeppe Christiansen','DNK','CEO','Maj Invest Group','fin'],
+['Jack Clark','USA','Co-Founder & Head of Public Benefit','Anthropic','tech'],
+['Vittorio Colao','ITA','Vice Chair EMEA','General Atlantic','fin'],
+['Patrick Collison','IRL','CEO','Stripe','tech'],
+['Mathias Döpfner','DEU','Chair and CEO','Axel Springer','med'],
+['Daniel P. Driscoll','USA','Secretary of the Army','US Government','def'],
+['Elizabeth Economy','USA','Hargrove Senior Fellow','Stanford University','acad'],
+['Daniel Ek','SWE','Chair','Spotify','tech'],
+['Øyvind Eriksen','NOR','President and CEO','Aker ASA','ind'],
+['José Luis Escrivá','ESP','Governor','Bank of Spain','gov'],
+['Niall Ferguson','USA','Milbank Family Senior Fellow','Hoover Institution','acad'],
+['Rana Foroohar','USA','Associate Editor','Financial Times','med'],
+['Chrystia Freeland','CAN','Special Rep. for the Reconstruction of Ukraine','Government of Canada','gov'],
+['Jeanette zu Fürstenberg','DEU','Managing Director','General Catalyst','fin'],
+['Pilar Gil','ESP','CEO','PRISA Media','med'],
+['Jamieson Greer','USA','US Trade Representative','USTR','gov'],
+['Karl-Theodor zu Guttenberg','DEU','Chair','Spitzberg Partners','fin'],
+['Kevin Harrington','USA','Fmr Sr. Director, Strategic Planning','US National Security Council','def'],
+['Demis Hassabis','GBR','Co-Founder and CEO','Google DeepMind','tech'],
+['Anne Heraty','IRL','Chair','Ibec','ind'],
+['André Hoffmann','CHE','Vice Chair','Roche','hlth'],
+['Uwe Horstmann','DEU','CEO','Stark','dind'],
+['Colin Hunt','IRL','CEO','AIB Group','fin'],
+['Roy Jakobs','NLD','President and CEO','Royal Philips','hlth'],
+['Rob Jetten','NLD','Prime Minister','Government of the Netherlands','gov'],
+['Pål Jonson','SWE','Minister for Defence','Government of Sweden','def'],
+['Sigrid Kaag','NLD','Co-Chair, Board of Directors','United Nations Foundation','mult'],
+['Kimberly Kagan','USA','President','Institute for the Study of War','acad'],
+['Oleksandr Kamyshin','UKR','Advisor to the President, Strategic Affairs','Government of Ukraine','gov'],
+['Alex Karp','USA','CEO','Palantir','tech'],
+['David Kirtley','USA','CEO','Helion Energy','nrg'],
+['Ali Koç','TUR','Vice Chair','Koç Holding','ind'],
+['Wojciech Kostrzewa','POL','President','Polish Business Roundtable','ind'],
+['Stephen Kotkin','USA','Senior Fellow','Hoover Institution','acad'],
+['Michael Kratsios','USA','Director','White House OSTP','gov'],
+['Henry R. Kravis','USA','Co-Founder & Co-Executive Chair','KKR','fin'],
+['Marie-Josée Kravis','USA','Chair','Museum of Modern Art','cult'],
+['Andrius Kubilius','INT','Commissioner, Defence and Space','European Commission','mult'],
+['André Kudelski','CHE','Chair and CEO','Kudelski Group','tech'],
+['David Lammy','GBR','Deputy PM; Justice Secretary','UK Government','gov'],
+['Markus Laubenthal','INT','General and Chief of Staff','SHAPE','def'],
+['Geoffrey van Leeuwen','INT','Chief of Staff, Office of the Sec. General','NATO','mult'],
+['Roland Lescure','FRA','Minister for Economy, Finance and Industry','Government of France','gov'],
+['Enrico Letta','ITA','Dean','IE School of Politics & Global Affairs','acad'],
+['Thomas Leysen','BEL','Chair','dsm-firmenich','ind'],
+['Robert Lighthizer','USA','Chair','Center for American Trade','acad'],
+['Erkki Liikanen','FIN','Chair, Trustees','IFRS Foundation','mult'],
+['Catherine MacGregor','FRA','CEO Group','ENGIE','nrg'],
+['Danny McCoy','IRL','CEO','Ibec','ind'],
+['Brett McGurk','USA','Global Affairs Analyst','CNN','med'],
+['Ross McInnes','FRA','President','Safran','dind'],
+['Britt Meelby Jensen','DNK','CEO','Ambu','hlth'],
+['Arthur Mensch','FRA','Co-Founder and CEO','Mistral AI','tech'],
+['Blaise Metreweli','GBR','Chief','Secret Intelligence Service','def'],
+['John Micklethwait','USA','Editor-in-Chief','Bloomberg','med'],
+['Zanny Minton Beddoes','GBR','Editor-in-Chief','The Economist','med'],
+['Duarte Moreira','PRT','Co-Founder and CEO','Zeno Partners','fin'],
+['Vivian Motzfeldt','GRL','Former Minister of Foreign Affairs','Government of Greenland','gov'],
+['Guta Moura Guedes','PRT','Chair and Co-Founder','ExperimentaDesign','cult'],
+['Mira Murati','USA','CEO','Thinking Machines Lab','tech'],
+['Alberto Nadal','ESP','Shadow Economic Minister','Popular Party','gov'],
+['H.M. the King of the Netherlands','NLD','Head of State','House of Orange-Nassau','roy'],
+['H.M. the Queen of the Netherlands','NLD','Consort','House of Orange-Nassau','roy'],
+['Jacek Olechowski','POL','Founder','Mediacap','med'],
+['Peter R. Orszag','USA','CEO and Chair','Lazard','fin'],
+['Murat Özyeğin','TUR','Chair','Fiba Group','fin'],
+['Dimitri Papalexopoulos','GRC','Chair','TITAN','ind'],
+['Samuel Paparo','USA','Commander','US Indo-Pacific Command','def'],
+['Skye Perryman','USA','President and CEO','Democracy Forward','cult'],
+['Kyriakos Pierrakakis','GRC','Minister of Economy and Finance','Government of Greece','gov'],
+['Patrick Pouyanné','FRA','Chair and CEO','TotalEnergies','nrg'],
+['Gideon Rachman','GBR','Chief Foreign Affairs Commentator','Financial Times','med'],
+['Rolly van Rappard','NLD','Co-Founder and Chair','CVC Capital Partners','fin'],
+['Nicolas Roche','FRA','Secretary General','SGDSN','def'],
+['Silvia Maria Rovere','ITA','Chair','Poste Italiane','ind'],
+['Mark Rutte','INT','Secretary General','NATO','mult'],
+['John Sawers','GBR','Executive Chair','Newbridge Advisory','def'],
+['Costantza Sbokou-Constantakopoulou','GRC','Goodwill Ambassador','UNESCO','cult'],
+['Nadia Schadlow','USA','Senior Fellow','Hudson Institute','acad'],
+['Gundbert Scherf','DEU','Co-Founder and Co-CEO','Helsing','dind'],
+['Brian Schimpf','USA','Co-Founder and CEO','Anduril','dind'],
+['Eric E. Schmidt','USA','Executive Chair and CEO','Relativity Space','tech'],
+['Mark Sedwill','GBR','Chair of Trustees','IISS','acad'],
+['Terri Sewell','USA','Member of Congress','US Congress','gov'],
+['Christian Sewing','DEU','CEO','Deutsche Bank','fin'],
+['Faryar Shirzad','USA','Chief Policy Officer','Coinbase','fin'],
+['Radosław Sikorski','POL','Minister of Foreign Affairs','Government of Poland','gov'],
+['Feridun H. Sinirlioğlu','TUR','Secretary General','OSCE','mult'],
+['Brad Smith','USA','Vice Chair and President','Microsoft','tech'],
+['Jason Smith','USA','Member of Congress','US Congress','gov'],
+['Jens Stoltenberg','NOR','Minister of Finance','Government of Norway','gov'],
+['Alexander Stubb','FIN','President of the Republic','Government of Finland','gov'],
+['Petra De Sutter','BEL','Rector','Ghent University','acad'],
+['Nicolai Tangen','NOR','CEO','Norges Bank Investment Management','fin'],
+['Mehmet Tara','TUR','President and Chair','Enka Holding','ind'],
+['Iryna Terekh','UKR','CEO and CTO','Fire Point','dind'],
+['Anna Thalhammer','AUT','Editor-in-Chief','Profil','med'],
+['Mark Tucker','GBR','Chair','AIA Group','fin'],
+['Valentino Valentini','ITA','Deputy Minister of Enterprise','Government of Italy','gov'],
+['Elina Valtonen','FIN','Minister of Foreign Affairs','Government of Finland','gov'],
+['Luis Vassy','FRA','President','Sciences Po','acad'],
+['Margrethe Vestager','DNK','Chair','Danish Technical University','acad'],
+['Marcus Wallenberg','SWE','Chair','SEB','fin'],
+['Alexandr Wang','USA','Chief AI Officer','Meta','tech'],
+['Fareed Zakaria','USA','Host','CNN','med'],
+['Ayşe Zarakol','TUR','Professor of International Relations','University of Cambridge','acad'],
+['Gerhard Zeiler','AUT','President','Warner Bros. Discovery','med'],
+['Oliver Zipse','DEU','Chair','BMW','ind']];
+
+/* ═══ institutions introduced only by tier-2, plus overrides ═══ */
+const ORGMETA={
+ 'European Commission':['mult','EU'],'European Parliament':['mult','EU'],'NATO':['mult','INT'],
+ 'SHAPE':['def','INT'],'United Nations':['mult','INT'],'Bilderberg Steering Committee':['mult','INT'],
+ 'Goldman Sachs':['fin','USA'],'KKR':['fin','USA'],'General Atlantic':['fin','USA'],
+ 'General Catalyst':['fin','USA'],'CVC Capital Partners':['fin','NLD'],
+ 'Founders Fund / Thiel network':['fin','USA'],'Prima Materia':['fin','SWE'],
+ 'Project A Ventures':['fin','DEU'],'Norges Bank Investment Management':['fin','NOR'],
+ 'Investor AB':['fin','SWE'],'Citigroup':['fin','USA'],'HSBC':['fin','GBR'],'BBVA':['fin','ESP'],
+ 'CDPQ':['fin','CAN'],'European Central Bank':['fin','EU'],'Bank of Finland':['fin','FIN'],
+ 'Alphabet / Google':['tech','USA'],'Microsoft':['tech','USA'],'OpenAI':['tech','USA'],
+ 'Scale AI':['tech','USA'],'Palantir':['tech','USA'],'Vodafone':['ind','GBR'],'AXA':['fin','FRA'],
+ 'Saab':['dind','SWE'],'Thales':['dind','FRA'],'Anduril':['dind','USA'],'Helsing':['dind','DEU'],
+ 'Washington Post':['med','USA'],'The Economist':['med','GBR'],'Bloomberg':['med','USA'],
+ 'Financial Times':['med','GBR'],'Reuters':['med','GBR'],
+ 'Stanford University':['acad','USA'],'Hoover Institution':['acad','USA'],
+ 'Hudson Institute':['acad','USA'],'University of Austin':['acad','USA'],
+ 'USTR':['gov','USA'],'US National Security Council':['gov','USA'],'US Government':['gov','USA'],
+ 'Government of North Dakota':['gov','USA'],'Government of Lithuania':['gov','LTU'],
+ 'US Department of Defense':['def','USA'],'Secret Intelligence Service':['def','GBR'],
+ 'UK Government':['gov','GBR'],'Government of Portugal':['gov','PRT'],
+ 'Government of Denmark':['gov','DNK'],'Government of Spain':['gov','ESP'],
+ 'Government of Belgium':['gov','BEL'],'Government of Germany':['gov','DEU'],
+ 'Ukrainian Railways':['ind','UKR'],'Snam':['nrg','ITA'],
+ 'Eni':['nrg','ITA'],'SLB':['nrg','USA'],'Sherry FitzGerald':['ind','IRL'],'Cpl Resources':['ind','IRL'],
+ 'Ibec':['ind','IRL'],'Deutsche Bank':['fin','DEU'],'Siemens':['ind','DEU'],'BMW':['ind','DEU'],
+ 'Roche':['hlth','CHE'],'Pfizer':['hlth','USA'],'TotalEnergies':['nrg','FRA'],'BP plc':['nrg','GBR'],
+ 'Meta':['tech','USA'],'Spotify':['tech','SWE'],'Axel Springer':['med','DEU'],
+ 'Google DeepMind':['tech','GBR'],'Novo Nordisk':['hlth','DNK']
+};
+
+/* ═══ tier 2 : source, target, relation, note, grade ═══
+   source/target = person name or institution name. */
+const E2=[
+['José Manuel Barroso','European Commission','prior','President of the European Commission, 2004–2014','A'],
+['José Manuel Barroso','Government of Portugal','prior','Prime Minister of Portugal, 2002–2004','A'],
+['Mark Rutte','Government of the Netherlands','prior','Prime Minister, 2010–2024','A'],
+['Jens Stoltenberg','NATO','prior','Secretary General, 2014–2024','A'],
+['Jens Stoltenberg','Government of Norway','prior','Prime Minister, 2000–01 and 2005–13','A'],
+['Margrethe Vestager','European Commission','prior','Executive Vice-President; Competition Commissioner','A'],
+['Margrethe Vestager','Government of Denmark','prior','Minister of Economic Affairs and the Interior','A'],
+['Andrius Kubilius','Government of Lithuania','prior','Prime Minister of Lithuania, twice','A'],
+['Nadia Calviño','Government of Spain','prior','First Deputy PM and Minister for Economic Affairs','A'],
+['Nadia Calviño','European Commission','prior','Deputy Director-General for Budget','B'],
+['Erkki Liikanen','European Commission','prior','European Commissioner, 1995–2004','A'],
+['Erkki Liikanen','Bank of Finland','prior','Governor, 2004–2018','A'],
+['Enrico Letta','Government of Italy','prior','Prime Minister, 2013–2014','A'],
+['Enrico Letta','European Commission','prior','Author of the 2024 single market report','B'],
+['Sigrid Kaag','Government of the Netherlands','prior','Deputy Prime Minister and Finance Minister','A'],
+['Sigrid Kaag','United Nations','prior','Senior humanitarian and reconstruction coordinator','B'],
+['Geoffrey van Leeuwen','Government of the Netherlands','prior','Minister for Foreign Trade and Development','B'],
+['Petra De Sutter','Government of Belgium','prior','Deputy Prime Minister','A'],
+['Radosław Sikorski','Government of Poland','prior','Minister of National Defence; Marshal of the Sejm','A'],
+['Karl-Theodor zu Guttenberg','Government of Germany','prior','Minister of Defence; Minister of Economics','A'],
+['Alexander Stubb','European Parliament','prior','Member of the European Parliament','A'],
+['Kyriakos Pierrakakis','European Parliament','prior','Ran on digital governance brief before Economy','B'],
+['Robert Lighthizer','USTR','prior','US Trade Representative, 2017–2021','A'],
+['Jamieson Greer','USTR','prior','Chief of staff to USTR Lighthizer','A'],
+['Nadia Schadlow','US National Security Council','prior','Deputy National Security Advisor for Strategy','A'],
+['Faryar Shirzad','US National Security Council','prior','Deputy NSA for International Economic Affairs','B'],
+['Faryar Shirzad','Goldman Sachs','prior','Global head of government affairs','B'],
+['Brett McGurk','US National Security Council','prior','White House coordinator for the Middle East','A'],
+['Michael Kratsios','US Government','prior','US Chief Technology Officer','A'],
+['Michael Kratsios','Founders Fund / Thiel network','prior','Chief of staff to Peter Thiel','B'],
+['Alex Karp','Founders Fund / Thiel network','invest','Palantir co-founded with Peter Thiel','A'],
+['Brian Schimpf','Palantir','prior','Director of engineering before co-founding Anduril','B'],
+['Brian Schimpf','Founders Fund / Thiel network','invest','Anduril backed by Founders Fund','B'],
+['Douglas Burgum','Microsoft','prior','Senior VP after Microsoft acquired Great Plains Software','B'],
+['Douglas Burgum','Government of North Dakota','prior','Governor, 2016–2024','A'],
+['Eric E. Schmidt','Alphabet / Google','prior','Chief Executive, then Executive Chairman','A'],
+['Eric E. Schmidt','US Department of Defense','prior','Chaired the Defense Innovation Board and NSCAI','B'],
+['Google DeepMind','Alphabet / Google','owns','DeepMind is an Alphabet subsidiary','A'],
+['Mira Murati','OpenAI','prior','Chief Technology Officer','A'],
+['Jack Clark','OpenAI','prior','Policy director before co-founding Anthropic','B'],
+['Jack Clark','Bloomberg','prior','Technology reporter','B'],
+['Microsoft','OpenAI','invest','Largest investor and infrastructure partner','A'],
+['Microsoft','Helion Energy','invest','Signed a fusion power purchase agreement','B'],
+['OpenAI','Helion Energy','invest','Backed by Sam Altman personally','B'],
+['Alexandr Wang','Scale AI','prior','Founder and CEO; Meta took a large stake','B'],
+['Meta','Scale AI','invest','Acquired a controlling stake alongside Wang’s move','B'],
+['Gundbert Scherf','Government of Germany','prior','Defence ministry, procurement modernisation','B'],
+['Prima Materia','Helsing','invest','Led Helsing’s funding rounds','B'],
+['Daniel Ek','Prima Materia','board','Co-founder; chairs Helsing through it','B'],
+['Uwe Horstmann','Project A Ventures','board','Co-founder and general partner; Stark spun out of it','B'],
+['Project A Ventures','Stark','invest','Founding backer','B'],
+['Marcus Wallenberg','Saab','board','Chairman of Saab AB','B'],
+['Marcus Wallenberg','Investor AB','board','Vice Chairman of the Wallenberg holding vehicle','B'],
+['Investor AB','Saab','invest','Principal shareholder','B'],
+['KKR','Axel Springer','invest','Took Axel Springer private and restructured it','A'],
+['Mathias Döpfner','KKR','invest','Counterparty and co-owner in the take-private','A'],
+['Marie-Josée Kravis','Hudson Institute','board','Former chair of the board','B'],
+['Marie-Josée Kravis','Henry R. Kravis','kin','Married','A'],
+['Anne Applebaum','Radosław Sikorski','kin','Married','A'],
+['Anne Applebaum','Washington Post','prior','Columnist and editorial board member','B'],
+['John Micklethwait','The Economist','prior','Editor-in-Chief, 2006–2015 — predecessor to Minton Beddoes','A'],
+['Camilla Cavendish','Financial Times','media','Contributing editor and columnist','B'],
+['Camilla Cavendish','UK Government','prior','Head of the Downing Street policy unit','B'],
+['Chrystia Freeland','Financial Times','prior','Deputy editor and US managing editor','B'],
+['Chrystia Freeland','Reuters','prior','Managing director and editor, consumer news','B'],
+['Chrystia Freeland','Government of Canada','prior','Deputy Prime Minister and Finance Minister','A'],
+['Fareed Zakaria','Washington Post','media','Columnist','B'],
+['Vittorio Colao','Government of Italy','prior','Minister for Technological Innovation','A'],
+['Vittorio Colao','Vodafone','prior','Chief Executive','A'],
+['Henri de Castries','AXA','prior','Chairman and Chief Executive','A'],
+['Henri de Castries','Bilderberg Steering Committee','board','Chairman of the steering committee','B'],
+['Mark Sedwill','UK Government','prior','Cabinet Secretary and National Security Adviser','A'],
+['John Sawers','Secret Intelligence Service','prior','Chief of SIS, 2009–2014 — predecessor line to Metreweli','A'],
+['John Sawers','UK Government','prior','Career diplomat; UK Permanent Representative to the UN','B'],
+['Peter R. Orszag','US Government','prior','Director, Office of Management and Budget','A'],
+['Peter R. Orszag','Citigroup','prior','Vice Chairman','B'],
+['Mark Tucker','HSBC','prior','Group Chairman','B'],
+['José Luis Escrivá','Government of Spain','prior','Minister for Digital Transformation and Social Security','A'],
+['José Luis Escrivá','BBVA','prior','Chief economist','B'],
+['José Luis Escrivá','European Central Bank','prior','Head of the monetary policy division','B'],
+['Alberto Nadal','Government of Spain','prior','Secretary of State for Budget','B'],
+['Oleksandr Kamyshin','Ukrainian Railways','prior','Chief Executive through the 2022 invasion','A'],
+['Catherine MacGregor','SLB','prior','President, reservoir and infrastructure','B'],
+['Ross McInnes','Thales','prior','Chief Financial Officer','B'],
+['Marco Alverà','Snam','prior','Chief Executive','A'],
+['Marco Alverà','Eni','prior','Senior executive','B'],
+['Anne Heraty','Sherry FitzGerald','board','Chair','A'],
+['Anne Heraty','Cpl Resources','prior','Founder and Chief Executive','B'],
+['Roland Lescure','CDPQ','prior','Chief Investment Officer in Québec','B'],
+['Niall Ferguson','Stanford University','board','Hoover is a Stanford institution','A'],
+['Stephen Kotkin','Stanford University','board','Hoover is a Stanford institution','A'],
+['Niall Ferguson','University of Austin','board','Co-founder','B'],
+['H.M. the Queen of the Netherlands','United Nations','board','UN Special Advocate for Inclusive Finance','B'],
+['H.M. the Queen of the Netherlands','Deutsche Bank','prior','Emerging-markets banking in New York','B'],
+['Nicolai Tangen','Siemens','invest','Norway’s fund holds ~1.5% of global listed equity','B'],
+['Nicolai Tangen','BMW','invest','Norway’s fund holds ~1.5% of global listed equity','B'],
+['Nicolai Tangen','Microsoft','invest','Norway’s fund holds ~1.5% of global listed equity','B'],
+['Nicolai Tangen','Pfizer','invest','Norway’s fund holds ~1.5% of global listed equity','B'],
+['Nicolai Tangen','Roche','invest','Norway’s fund holds ~1.5% of global listed equity','B'],
+['Nicolai Tangen','TotalEnergies','invest','Norway’s fund holds ~1.5% of global listed equity','B'],
+['Nicolai Tangen','Deutsche Bank','invest','Norway’s fund holds ~1.5% of global listed equity','B'],
+['Nicolai Tangen','BP plc','invest','Norway’s fund holds ~1.5% of global listed equity','B'],
+['Nicolai Tangen','Alphabet / Google','invest','Norway’s fund holds ~1.5% of global listed equity','B'],
+['Nicolai Tangen','Meta','invest','Norway’s fund holds ~1.5% of global listed equity','B'],
+['Markus Laubenthal','NATO','prior','SHAPE is NATO’s operational command','A'],
+['SHAPE','NATO','owns','Supreme Headquarters Allied Powers Europe','A'],
+['Andrius Kubilius','NATO','prior','EU defence portfolio works directly with NATO','B'],
+['Jeppe Christiansen','Novo Nordisk','board','Long-serving board member','B'],
+['Britt Meelby Jensen','Novo Nordisk','prior','Executive roles before Ambu','B'],
+['Jeanette zu Fürstenberg','General Catalyst','board','La Famiglia merged into General Catalyst','B'],
+['Pilar Gil','PRISA Media','board','Family shareholder as well as chief executive','B'],
+['Ali Koç','Koç Holding','board','Founding family','A'],
+['Murat Özyeğin','Fiba Group','board','Founding family','A'],
+['Harold Boël','Sofina','board','Boël family holding','B'],
+['Caroline Berg','Axel Johnson','board','Ax:son Johnson family holding','B'],
+['Oliver Zipse','BMW','board','Quandt family control','B'],
+['Terri Sewell','US Congress','board','Ways and Means committee','B'],
+['Jason Smith','US Congress','board','Chairs Ways and Means — trade jurisdiction over USTR','B'],
+['US Congress','USTR','owns','Congressional trade jurisdiction','B'],
+['Kimberly Kagan','Institute for the Study of War','board','Founder','A'],
+['Danny McCoy','Ibec','board','Chief executive alongside Heraty as chair','A'],
+['Demis Hassabis','Isomorphic Labs','board','Founder and Chief Executive','B'],
+['Nicolai Tangen','Government of Norway','prior','NBIM manages the state pension fund on the ministry’s mandate','A']
+];
+
+/* ═══ institutional mass : [USD bn, metric, grade] ═══
+   Order-of-magnitude, 2025 basis. Market caps move; treat as scale, not price. */
+const ECON={
+ 'Microsoft':[3400,'mcap','A'],'Alphabet / Google':[2400,'mcap','A'],'Meta':[1600,'mcap','A'],
+ 'Norges Bank Investment Management':[1900,'aum','A'],'Amundi SA':[2400,'aum','A'],
+ 'Goldman Sachs':[3200,'assets','A'],'Deutsche Bank':[1400,'assets','A'],
+ 'KKR':[680,'aum','A'],'CVC Capital Partners':[220,'aum','B'],'General Atlantic':[100,'aum','B'],
+ 'General Catalyst':[36,'aum','B'],'European Investment Bank':[600,'assets','B'],
+ 'Investor AB':[110,'nav','B'],'SEB':[42,'mcap','B'],'Erste Group Bank':[36,'mcap','B'],
+ 'AIB Group':[20,'mcap','B'],'Lazard':[5,'mcap','B'],'Sofina':[9,'nav','B'],
+ 'Maj Invest Group':[15,'aum','C'],'Coinbase':[70,'mcap','B'],'Bank of Spain':[0,'','C'],
+ 'Roche':[250,'mcap','A'],'Pfizer':[145,'mcap','A'],'Royal Philips':[26,'mcap','B'],
+ 'Ambu':[4,'mcap','B'],'Novo Nordisk':[230,'mcap','B'],
+ 'Siemens':[190,'mcap','A'],'BMW':[55,'mcap','A'],'dsm-firmenich':[26,'mcap','B'],
+ 'Koç Holding':[16,'mcap','B'],'Aker ASA':[5,'mcap','B'],'Axel Johnson':[10,'rev','C'],
+ 'Enka Holding':[8,'mcap','C'],'TITAN':[4,'mcap','B'],'Poste Italiane':[22,'mcap','B'],
+ 'Fiba Group':[5,'rev','C'],'Normet Group':[0.5,'rev','C'],
+ 'TotalEnergies':[135,'mcap','A'],'BP plc':[90,'mcap','A'],'ENGIE':[50,'mcap','B'],
+ 'Eni':[52,'mcap','B'],'Snam':[16,'mcap','B'],'SLB':[45,'mcap','B'],
+ 'Helion Energy':[5.4,'val','B'],'zhero / TES':[1,'val','C'],
+ 'Palantir':[300,'mcap','B'],'Spotify':[130,'mcap','A'],'Stripe':[106,'val','B'],
+ 'OpenAI':[300,'val','B'],'Anthropic':[180,'val','B'],'Mistral AI':[14,'val','B'],
+ 'Scale AI':[29,'val','B'],'Thinking Machines Lab':[12,'val','C'],
+ 'Relativity Space':[4,'val','C'],'Kudelski Group':[0.2,'mcap','B'],
+ 'Anduril':[30,'val','B'],'Helsing':[13,'val','B'],'Saab':[32,'mcap','B'],
+ 'Safran':[125,'mcap','A'],'Thales':[60,'mcap','B'],'Stark':[0.5,'val','C'],
+ 'WB Group':[1,'rev','C'],'Fire Point':[1,'rev','C'],
+ 'Axel Springer':[14,'val','B'],'Warner Bros. Discovery':[32,'mcap','B'],
+ 'Bloomberg':[13,'rev','B'],'Financial Times':[0.6,'rev','B'],'The Economist':[0.5,'rev','B'],
+ 'PRISA Media':[0.6,'mcap','C'],'Nikkei':[3,'rev','C'],'Exor':[35,'nav','B'],
+ 'Vodafone':[24,'mcap','B'],'AXA':[100,'mcap','B'],'HSBC':[210,'mcap','B'],
+ 'BBVA':[95,'mcap','B'],'Citigroup':[180,'mcap','B'],'AIA Group':[75,'mcap','B'],
+ 'US Government':[7000,'budget','A'],'UK Government':[1600,'budget','B'],
+ 'Government of France':[1700,'budget','B'],'Government of Germany':[600,'budget','B'],
+ 'Government of Italy':[1200,'budget','C'],'Government of Spain':[700,'budget','C'],
+ 'Government of the Netherlands':[450,'budget','C'],'Government of Canada':[400,'budget','C'],
+ 'Government of Poland':[200,'budget','C'],'Government of Norway':[200,'budget','C'],
+ 'European Commission':[210,'budget','B'],'NATO':[1500,'budget','B'],
+ 'US Department of Defense':[900,'budget','A'],'United Nations':[70,'budget','C'],
+ 'US Congress':[7000,'budget','B'],'Ukrainian Railways':[3,'rev','C']
+};
+
+/* ═══ published personal wealth : [low bn, high bn, basis, note] ═══
+   Included ONLY where a figure is actually published or directly derivable from a
+   disclosed stake or liquidity event. Everyone else is deliberately blank. */
+const WEALTH={
+ 'Eric E. Schmidt':[22,32,'listed','Alphabet equity accumulated 2001–2017'],
+ 'Henry R. Kravis':[10,16,'listed','Personal KKR founder equity, distinct from firm AUM'],
+ 'Alex Karp':[8,14,'listed','Almost entirely Palantir stock; moves several billion on a bad quarter'],
+ 'Patrick Collison':[8,14,'listed','Stripe stake at the most recent employee tender price'],
+ 'Daniel Ek':[7,11,'listed','Spotify holding plus Prima Materia positions'],
+ 'André Hoffmann':[4,8,'derived','Share of the Hoffmann/Oeri bloc controlling roughly 9% of Roche'],
+ 'Alexandr Wang':[2,5,'listed','Scale AI stake, largely crystallised by the Meta transaction'],
+ 'Ali Koç':[1,3,'derived','Individual share of a larger Koç family bloc'],
+ 'Mehmet Tara':[1,4,'derived','Tara family interest in Enka'],
+ 'Mathias Döpfner':[1,3,'derived','~22% of Axel Springer, transferred to him by Friede Springer'],
+ 'Caroline Berg':[1,3,'derived','Ax:son Johnson family interest in Axel Johnson'],
+ 'Harold Boël':[0.3,1.5,'derived','Boël family interest in Sofina'],
+ 'Murat Özyeğin':[0.5,2,'derived','Özyeğin family interest in Fiba'],
+ 'Demis Hassabis':[0.4,1.5,'derived','DeepMind sale proceeds, Alphabet equity, Isomorphic stake'],
+ 'Nicolai Tangen':[0.5,1.2,'derived','Founded AKO Capital; assets moved to a foundation and blind trust for the NBIM role'],
+ 'Douglas Burgum':[0.1,1.1,'disclosed','Great Plains sold to Microsoft for ~$1.1bn in 2001; federal disclosure on appointment'],
+ 'H.M. the King of the Netherlands':[0.2,1,'derived','Royal house assets; estimates vary very widely and are contested'],
+ 'Albert Bourla':[0.03,0.12,'disclosed','Accumulated Pfizer equity per proxy statements'],
+ 'Peter R. Orszag':[0.02,0.08,'disclosed','Lazard compensation; no published net-worth estimate exists'],
+ 'Stacey Abrams':[0.003,0.01,'disclosed','Georgia campaign financial disclosures']
+};
+const NOWEALTH={
+ 'Blaise Metreweli':'Serving intelligence chief — no disclosure exists and I will not estimate one',
+ 'Samuel Paparo':'Serving combatant commander — military pay is public, personal finances are not',
+ 'Markus Laubenthal':'Serving general officer — no published figure',
+ 'Iryna Terekh':'Private wartime defence firm in Ukraine — no disclosure, and estimating one would be irresponsible',
+ 'Nicolas Roche':'Serving French national security official — no published figure',
+ 'Oleksandr Kamyshin':'Ukrainian official — declarations exist in the national register but I cannot verify current contents'
+};
+
+/* ═══ ownership chains : [parent, child, note, grade, childKind, childCountry] ═══ */
+const OWN=[
+['Alphabet / Google','Google DeepMind','AI research division','A','tech','GBR'],
+['Alphabet / Google','Isomorphic Labs','Drug discovery spinout, run by Hassabis','B','hlth','GBR'],
+['Alphabet / Google','Waymo','Autonomous driving','A','tech','USA'],
+['Alphabet / Google','YouTube','','A','med','USA'],
+['Microsoft','LinkedIn','','A','tech','USA'],
+['Microsoft','GitHub','','A','tech','USA'],
+['Microsoft','Activision Blizzard','','A','tech','USA'],
+['Microsoft','Nuance Communications','Clinical speech and AI','B','hlth','USA'],
+['Meta','Instagram','','A','med','USA'],
+['Meta','WhatsApp','','A','tech','USA'],
+['Roche','Genentech','Wholly owned since 2009','A','hlth','USA'],
+['Roche','Chugai Pharmaceutical','Majority stake','B','hlth','INT'],
+['Roche','Foundation Medicine','Genomic profiling','B','hlth','USA'],
+['Roche','Flatiron Health','Oncology real-world data','B','hlth','USA'],
+['Pfizer','Seagen','Antibody-drug conjugates, acquired 2023','A','hlth','USA'],
+['Pfizer','Hospira','Injectables and biosimilars','B','hlth','USA'],
+['Royal Philips','Philips Respironics','Sleep and respiratory care','B','hlth','USA'],
+['Royal Philips','BioTelemetry','Remote cardiac monitoring','B','hlth','USA'],
+['Novo Nordisk Foundation','Novo Holdings','Foundation’s investment arm','A','fin','DNK'],
+['Novo Holdings','Novo Nordisk','Controlling voting stake','A','hlth','DNK'],
+['Novo Holdings','Catalent','Acquired 2024; fill-finish sites passed to Novo Nordisk','B','hlth','USA'],
+['Siemens','Siemens Healthineers','Majority stake','A','hlth','DEU'],
+['Siemens','Siemens Digital Industries Software','Mentor Graphics lineage','A','tech','USA'],
+['Siemens','Altair Engineering','Acquired 2025','B','tech','USA'],
+['Siemens','Siemens Mobility','Rail systems','A','ind','DEU'],
+['BMW','MINI','','A','ind','GBR'],
+['BMW','Rolls-Royce Motor Cars','','A','ind','GBR'],
+['Koç Holding','Tüpraş','Türkiye’s dominant oil refiner','A','nrg','TUR'],
+['Koç Holding','Ford Otosan','Ford joint venture, major European van production','A','ind','TUR'],
+['Koç Holding','Arçelik / Beko','White goods, owns Grundig and Hotpoint brands','A','ind','TUR'],
+['Koç Holding','Yapı Kredi','Banking','A','fin','TUR'],
+['Koç Holding','Otokar','Armoured vehicles and buses','B','dind','TUR'],
+['Koç Holding','Türk Traktör','Case New Holland joint venture','B','ind','TUR'],
+['Wallenberg Foundations','Investor AB','Apex of the Wallenberg sphere','A','fin','SWE'],
+['Investor AB','Atlas Copco','','A','ind','SWE'],
+['Investor AB','Saab','Principal shareholder','A','dind','SWE'],
+['Investor AB','SEB','Principal shareholder','A','fin','SWE'],
+['Investor AB','ABB','Large minority stake','B','ind','CHE'],
+['Investor AB','AstraZeneca','Large minority stake','B','hlth','GBR'],
+['Investor AB','Ericsson','Controlling voting stake','B','tech','SWE'],
+['Investor AB','Patricia Industries','Wholly owned subsidiaries arm','B','fin','SWE'],
+['Investor AB','EQT','Founding shareholder','B','fin','SWE'],
+['Aker ASA','Aker BP','North Sea oil and gas','A','nrg','NOR'],
+['Aker ASA','Aker Solutions','Subsea engineering','A','ind','NOR'],
+['Aker ASA','Cognite','Industrial data software','B','tech','NOR'],
+['Aker ASA','Aker Horizons','Renewables and carbon capture','B','nrg','NOR'],
+['Axel Johnson','Martin & Servera','Foodservice distribution','B','ind','SWE'],
+['Axel Johnson','KICKS','Beauty retail','B','ind','SWE'],
+['Axel Johnson','Åhléns','Department stores','B','ind','SWE'],
+['Enka Holding','Enka Power','Gas-fired generation, historically Russian assets','B','nrg','TUR'],
+['Enka Holding','Çimtaş','Heavy steel fabrication','C','ind','TUR'],
+['Fiba Group','Fibabanka','Turkish banking','B','fin','TUR'],
+['Fiba Group','Credit Europe Bank','Dutch-registered banking arm','B','fin','NLD'],
+['Sofina','ProQuest / Cambridge Information Group','Academic information','C','med','USA'],
+['Sofina','Petit Bateau','Consumer brands','C','ind','FRA'],
+['dsm-firmenich','Firmenich','Perfumery and taste, merged 2023','A','ind','CHE'],
+['TotalEnergies','Saft','Batteries and storage','B','nrg','FRA'],
+['TotalEnergies','TotalEnergies Renouvelables','Solar and wind platform','B','nrg','FRA'],
+['BP plc','Castrol','Lubricants','A','nrg','GBR'],
+['BP plc','Lightsource bp','Solar development','B','nrg','GBR'],
+['BP plc','Archaea Energy','Renewable natural gas','B','nrg','USA'],
+['Eni','Plenitude','Retail power and renewables','B','nrg','ITA'],
+['Eni','Versalis','Chemicals','B','ind','ITA'],
+['Eni','Var Energi','Norwegian upstream','B','nrg','NOR'],
+['SLB','ChampionX','Acquired 2025','B','nrg','USA'],
+['Safran','CFM International','50/50 engine venture with GE Aerospace','A','dind','INT'],
+['Safran','Safran Electronics & Defense','Avionics, optronics, guidance','A','dind','FRA'],
+['Safran','Safran Landing Systems','','A','dind','FRA'],
+['Safran','Collins Aerospace Actuation','Acquired from RTX, 2024','B','dind','USA'],
+['GE Aerospace','CFM International','The other half of the venture','A','dind','USA'],
+['Thales','Thales Alenia Space','Joint venture with Leonardo','A','dind','FRA'],
+['Thales','Gemalto','Digital identity and security','A','tech','NLD'],
+['Thales','Imperva','Cybersecurity, acquired 2023','B','tech','USA'],
+['Saab','Saab Kockums','Submarines and surface vessels','B','dind','SWE'],
+['Saab','Combitech','Technical consulting','C','tech','SWE'],
+['Anduril','Area-I','Air-launched effects','B','dind','USA'],
+['Anduril','Adranos','Solid rocket motors','B','dind','USA'],
+['Anduril','Blue Force Technologies','Autonomous air vehicles','B','dind','USA'],
+['Axel Springer','BILD','','A','med','DEU'],
+['Axel Springer','WELT','','A','med','DEU'],
+['Axel Springer','Politico','Acquired 2021','A','med','USA'],
+['Axel Springer','Business Insider','','A','med','USA'],
+['KKR','Axel Springer Classifieds','2025 split: KKR and CPPIB took the classifieds side','B','med','DEU'],
+['Axel Springer Classifieds','StepStone','Jobs marketplace','B','med','DEU'],
+['Axel Springer Classifieds','AVIV Group','Property portals','B','med','DEU'],
+['KKR','FiberCop','Telecom Italia’s fixed network, acquired 2024','B','tech','ITA'],
+['KKR','Global Atlantic','Insurance and annuities','B','fin','USA'],
+['KKR','BMC Software','','B','tech','USA'],
+['Warner Bros. Discovery','CNN','','A','med','USA'],
+['Warner Bros. Discovery','HBO / Max','','A','med','USA'],
+['Warner Bros. Discovery','Warner Bros. Pictures','','A','med','USA'],
+['Warner Bros. Discovery','Eurosport','','B','med','INT'],
+['Exor','The Economist','Largest shareholder in the Economist Group','B','med','GBR'],
+['Exor','Royal Philips','~15% stake taken in 2023','B','hlth','NLD'],
+['Exor','Stellantis','Controlling shareholder','A','ind','NLD'],
+['Exor','Ferrari','Controlling shareholder','A','ind','ITA'],
+['Nikkei','Financial Times','Acquired from Pearson, 2015','A','med','GBR'],
+['Financial Times','The Banker / fDi Intelligence','Specialist titles','C','med','GBR'],
+['Emerson Collective','The Atlantic','Majority owner','B','med','USA'],
+['Bloomberg','Bloomberg News','','A','med','USA'],
+['Bloomberg','Bloomberg NEF','Energy research','B','med','GBR'],
+['PRISA Media','El País','','A','med','ESP'],
+['PRISA Media','Cadena SER','','A','med','ESP'],
+['Crédit Agricole','Amundi SA','~68% shareholder','A','fin','FRA'],
+['Amundi SA','Lyxor','ETF platform, acquired 2021','B','fin','FRA'],
+['Deutsche Bank','DWS Group','Majority-owned asset manager','A','fin','DEU'],
+['Deutsche Bank','Postbank','Retail banking','A','fin','DEU'],
+['ERSTE Foundation','Erste Group Bank','Anchor shareholder','B','fin','AUT'],
+['Erste Group Bank','Česká spořitelna','Czech retail bank','B','fin','INT'],
+['Erste Group Bank','Banca Comercială Română','Romanian retail bank','B','fin','INT'],
+['AIB Group','Goodbody Stockbrokers','','B','fin','IRL'],
+['Poste Italiane','Poste Vita','Insurance','B','fin','ITA'],
+['Poste Italiane','BancoPosta','Retail banking and payments','B','fin','ITA'],
+['Poste Italiane','Telecom Italia','Became largest shareholder, 2025','B','tech','ITA'],
+['TITAN','Titan America','US arm, listed 2025','B','ind','USA'],
+['Stripe','Bridge','Stablecoin infrastructure, acquired 2024','B','fin','USA'],
+['Stripe','Paystack','African payments','B','fin','INT'],
+['Coinbase','Deribit','Crypto derivatives, acquired 2025','B','fin','INT'],
+['Coinbase','Base','Layer-2 network','B','tech','USA'],
+['Spotify','Megaphone','Podcast advertising','C','med','USA'],
+['Kudelski Group','Nagra','Content security','B','tech','CHE'],
+['Kudelski Group','Kudelski Security','','B','tech','CHE'],
+['Vodafone','Vantage Towers','Tower infrastructure','B','tech','DEU'],
+['AXA','AXA XL','Specialty and reinsurance','B','fin','INT'],
+['Government of France','Thales','~25% state shareholding','A','dind','FRA'],
+['Government of France','Safran','~11% state shareholding','B','dind','FRA'],
+['Government of France','ENGIE','~24% state shareholding','A','nrg','FRA'],
+['Government of France','EDF','Fully renationalised, 2023','A','nrg','FRA'],
+['Government of Italy','Poste Italiane','State and CDP hold ~35%','A','ind','ITA'],
+['Government of Italy','Eni','State and CDP hold ~30%','A','nrg','ITA'],
+['Government of Italy','Leonardo','~30% state shareholding','A','dind','ITA'],
+['Government of Norway','Equinor','~67% state shareholding','A','nrg','NOR'],
+['Government of Norway','Norges Bank Investment Management','Manages the sovereign wealth fund','A','fin','NOR'],
+['Government of Spain','Indra','SEPI is the anchor shareholder','B','dind','ESP'],
+['Government of Spain','Telefónica','SEPI took a stake in 2023','B','tech','ESP'],
+['Government of Finland','Solidium','State holding vehicle','B','fin','FIN'],
+['Solidium','Nokia','State minority stake','B','tech','FIN'],
+['Solidium','Fortum','State majority stake','B','nrg','FIN'],
+['Government of Sweden','Vattenfall','Wholly state-owned','A','nrg','SWE'],
+['Government of Germany','Deutsche Telekom','State and KfW hold ~30%','B','tech','DEU'],
+['Government of Germany','Commerzbank','Residual state stake','B','fin','DEU'],
+['Government of Ukraine','Ukrainian Railways','State-owned operator','A','ind','UKR']
+];
+
+/* ═══ graph assembly ═══ */
+const nodes=[], byId=new Map(), edges=[];
+function addNode(id,kind,cty,type,extra){
+  if(byId.has(id)) return byId.get(id);
+  const n={id,kind,cty,type,...extra,deg:0,pdeg:0,x:0,y:0,vx:0,vy:0,fixed:false};
+  n.i=nodes.length; nodes.push(n); byId.set(id,n); return n;
+}
+P.forEach(p=>addNode(p[0],p[4],p[1],'person',{title:p[2],org:p[3]}));
+P.forEach(p=>{
+  const m=ORGMETA[p[3]];
+  addNode(p[3], m?m[0]:p[4], m?m[1]:p[1], 'org', {});
+});
+function resolve(name){
+  if(byId.has(name)) return byId.get(name);
+  const m=ORGMETA[name];
+  return addNode(name, m?m[0]:'ind', m?m[1]:'INT', 'org', {});
+}
+P.forEach(p=>edges.push({s:byId.get(p[0]), t:byId.get(p[3]), rel:'current', note:p[2], g:'A', tier:1}));
+E2.forEach(e=>{
+  const s=resolve(e[0]), t=resolve(e[1]);
+  if(s===t) return;
+  edges.push({s,t,rel:e[2],note:e[3],g:e[4],tier:2});
+});
+OWN.forEach(o=>{
+  const p=resolve(o[0]);
+  let c=byId.get(o[1]);
+  if(!c) c=addNode(o[1], o[4]||'ind', o[5]||'INT', 'org', {});
+  if(p===c) return;
+  edges.push({s:p,t:c,rel:'sub',note:o[2]||'Subsidiary or controlling stake',g:o[3],tier:3});
+});
+edges.forEach(e=>{
+  e.s.deg++; e.t.deg++;
+  if(e.s.type==='person') e.t.pdeg++;
+  if(e.t.type==='person') e.s.pdeg++;
+});
+nodes.forEach(n=>{
+  if(n.type==='org' && !n.title) n.title = KL[n.kind]||n.kind;
+  if(n.type==='org'){ const e=ECON[n.id]; if(e&&e[0]>0){ n.econ=e[0]; n.metric=e[1]; n.econG=e[2]; } }
+  if(n.type==='person'){ const w=WEALTH[n.id]; if(w){ n.wlo=w[0]; n.whi=w[1]; n.wbasis=w[2]; n.wnote=w[3]; }
+    if(NOWEALTH[n.id]) n.wnone=NOWEALTH[n.id]; }
+});
+// controlled mass: the largest institution a person is directly attached to
+nodes.filter(n=>n.type==='person').forEach(p=>{
+  let m=0, src=null;
+  edges.forEach(e=>{ const o = e.s===p?e.t : (e.t===p?e.s:null);
+    if(o && o.econ && o.econ>m){ m=o.econ; src=o; } });
+  p.ctrl=m; p.ctrlSrc=src;
+});
+const MET={mcap:'market cap',aum:'assets under management',assets:'balance sheet',
+ val:'private valuation',rev:'annual revenue',nav:'net asset value',budget:'annual budget'};
+function money(b){ if(b>=1000) return '$'+(b/1000).toFixed(b>=10000?0:1)+'tn';
+  if(b>=1) return '$'+(b>=100?Math.round(b):b.toFixed(1))+'bn';
+  return '$'+Math.round(b*1000)+'m'; }
+function wRange(n){ return n.wlo>=1||n.whi>=1 ? money(n.wlo)+'–'+money(n.whi)
+  : money(n.wlo)+'–'+money(n.whi); }
+
+/* ═══ state ═══ */
+let mode='bridge', grade='B', q='', sel=null, showLabels=true;
+let tx=0, ty=0, k=1;
+const svg=document.getElementById('svg'), stage=document.getElementById('stage'),
+      tip=document.getElementById('tip'), side=document.getElementById('side');
+const NS='http://www.w3.org/2000/svg';
+const root=document.createElementNS(NS,'g');
+const gE=document.createElementNS(NS,'g'), gN=document.createElementNS(NS,'g'), gL=document.createElementNS(NS,'g');
+root.appendChild(gE); root.appendChild(gN); root.appendChild(gL); svg.appendChild(root);
+
+const REL={current:['Current post','#8093A0','2,0',0.35],
+           prior:['Prior office','#C9A227','5,3',0.7],
+           board:['Board or governance','#2BD9A8','2,0',0.7],
+           invest:['Ownership or funding','#FFC53D','1,4',0.7],
+           owns:['Corporate parent','#3FC7E0','2,0',0.7],
+           media:['Contributing role','#FF6FA5','5,3',0.6],
+           kin:['Family','#E07BFF','2,0',0.95],
+           sub:['Subsidiary / controlling stake','#7FA8B8','2,0',0.55]};
+
+function gradeOK(e){ return grade==='B' || e.g==='A'; }
+function activeSet(){
+  let E=edges.filter(gradeOK);
+  if(mode==='tier2') E=E.filter(e=>e.tier===2 || e.t.pdeg>1 || e.s.pdeg>1);
+  if(mode==='capital') E=E.filter(e=>e.tier===3 || e.rel==='invest' || e.rel==='owns' ||
+      (e.rel==='current' && (e.t.econ||e.s.econ)) || e.s.wlo!==undefined || e.t.wlo!==undefined);
+  const keep=new Set();
+  if(mode==='bridge'){
+    const bridges=new Set(nodes.filter(n=>n.type==='org'&&n.pdeg>1).map(n=>n.id));
+    E=E.filter(e=>(e.s.type!=='org'||bridges.has(e.s.id))&&(e.t.type!=='org'||bridges.has(e.t.id)));
+  }
+  E.forEach(e=>{keep.add(e.s.i); keep.add(e.t.i);});
+  return {E, N:nodes.filter(n=>keep.has(n.i))};
+}
+
+/* ═══ Brandes betweenness ═══ */
+function betweenness(N,E){
+  const idx=new Map(N.map((n,i)=>[n.i,i])), adj=N.map(()=>[]);
+  E.forEach(e=>{ const a=idx.get(e.s.i), b=idx.get(e.t.i); adj[a].push(b); adj[b].push(a); });
+  const C=new Float64Array(N.length);
+  for(let s=0;s<N.length;s++){
+    const S=[], Pr=N.map(()=>[]), sig=new Float64Array(N.length), d=new Int32Array(N.length).fill(-1);
+    sig[s]=1; d[s]=0; const Q=[s];
+    for(let h=0;h<Q.length;h++){ const v=Q[h]; S.push(v);
+      for(const w of adj[v]){ if(d[w]<0){d[w]=d[v]+1; Q.push(w);} if(d[w]===d[v]+1){sig[w]+=sig[v]; Pr[w].push(v);} } }
+    const del=new Float64Array(N.length);
+    for(let i=S.length-1;i>=0;i--){ const w=S[i];
+      for(const v of Pr[w]) del[v]+=(sig[v]/sig[w])*(1+del[w]);
+      if(w!==s) C[w]+=del[w]; }
+  }
+  const out=new Map(); N.forEach((n,i)=>out.set(n.i,C[i]/2));
+  return out;
+}
+function components(N,E){
+  const idx=new Map(N.map((n,i)=>[n.i,i])), adj=N.map(()=>[]), seen=new Array(N.length).fill(false);
+  E.forEach(e=>{const a=idx.get(e.s.i),b=idx.get(e.t.i);adj[a].push(b);adj[b].push(a);});
+  let c=0, largest=0;
+  for(let i=0;i<N.length;i++){ if(seen[i])continue; c++; let n=0; const Q=[i]; seen[i]=true;
+    for(let h=0;h<Q.length;h++){ n++; for(const w of adj[Q[h]]) if(!seen[w]){seen[w]=true;Q.push(w);} }
+    largest=Math.max(largest,n); }
+  return {c,largest};
+}
+
+/* ═══ force simulation ═══ */
+let cur={E:[],N:[]}, alpha=1, ticking=false, BW=new Map();
+function seed(){
+  cur.N.forEach((n,i)=>{
+    if(n.x===0&&n.y===0){
+      const a=i*2.399963, r=14*Math.sqrt(i+1);
+      n.x=Math.cos(a)*r; n.y=Math.sin(a)*r;
+    }
+  });
+}
+function tick(){
+  const N=cur.N, E=cur.E, n=N.length;
+  for(let i=0;i<n;i++){
+    const a=N[i];
+    for(let j=i+1;j<n;j++){
+      const b=N[j]; let dx=b.x-a.x, dy=b.y-a.y, d2=dx*dx+dy*dy;
+      if(d2<1e-4){dx=(Math.random()-.5);dy=(Math.random()-.5);d2=dx*dx+dy*dy;}
+      if(d2>640000) continue;
+      const f=(2400*(1+Math.min(a.deg,10)*.08)*(1+Math.min(b.deg,10)*.08))/d2;
+      const d=Math.sqrt(d2), fx=dx/d*f, fy=dy/d*f;
+      a.vx-=fx; a.vy-=fy; b.vx+=fx; b.vy+=fy;
+    }
+  }
+  E.forEach(e=>{
+    const a=e.s,b=e.t, dx=b.x-a.x, dy=b.y-a.y, d=Math.sqrt(dx*dx+dy*dy)||1;
+    const rest=e.rel==='current'?74:96, f=(d-rest)*0.030;
+    const fx=dx/d*f, fy=dy/d*f;
+    a.vx+=fx; a.vy+=fy; b.vx-=fx; b.vy-=fy;
+  });
+  N.forEach(p=>{ p.vx-=p.x*0.0022; p.vy-=p.y*0.0022; });
+  N.forEach(p=>{ if(p.fixed){p.vx=p.vy=0;return;}
+    p.vx*=0.86; p.vy*=0.86; p.x+=p.vx*alpha; p.y+=p.vy*alpha; });
+  alpha*=0.994;
+}
+function loop(){ if(!ticking) return;
+  for(let s=0;s<2;s++) tick();
+  paint();
+  if(alpha>0.02) requestAnimationFrame(loop); else ticking=false;
+}
+function kick(a){ alpha=a; if(!ticking){ticking=true;requestAnimationFrame(loop);} }
+
+/* ═══ rendering ═══ */
+let els=new Map();
+function rebuild(){
+  cur=activeSet(); seed();
+  BW=betweenness(cur.N,cur.E);
+  const cc=components(cur.N,cur.E);
+  document.getElementById('tN').textContent=cur.N.length;
+  document.getElementById('tE').textContent=cur.E.length;
+  document.getElementById('tB').textContent=nodes.filter(n=>n.type==='org'&&n.pdeg>1).length;
+  document.getElementById('tC').textContent=cc.c;
+  document.getElementById('tL').textContent=cc.largest;
+  document.getElementById('tM').textContent=money(cur.N.reduce((a,n)=>a+(n.econ||0),0));
+  gE.innerHTML=''; gN.innerHTML=''; gL.innerHTML=''; els=new Map();
+  cur.E.forEach(e=>{
+    const r=REL[e.rel], ln=document.createElementNS(NS,'line');
+    ln.setAttribute('stroke',r[1]); ln.setAttribute('stroke-width',e.rel==='kin'?2:1.1);
+    ln.setAttribute('stroke-dasharray',r[2]); ln.setAttribute('opacity',r[3]*0.55);
+    e.el=ln; gE.appendChild(ln);
+  });
+  cur.N.forEach(n=>{
+    let el;
+    if(n.type==='person'){
+      el=document.createElementNS(NS,'circle');
+      const wr = n.whi ? 4.4+Math.log10(n.whi*1000+10)*1.5 : 4.4+Math.min(n.deg,8)*0.55;
+      el.setAttribute('r', wr.toFixed(2));
+      el.setAttribute('fill',KC[n.kind]); el.setAttribute('stroke','#0E1417');
+    } else {
+      const s = n.econ ? 8+Math.log10(n.econ+1)*4.6 : 8+Math.min(n.pdeg,10)*1.2;
+      el=document.createElementNS(NS,'rect');
+      el.setAttribute('width',s); el.setAttribute('height',s); el.setAttribute('rx',1.5);
+      el.setAttribute('fill','#111A1F'); el.setAttribute('stroke',KC[n.kind]||'#8093A0');
+      el.setAttribute('stroke-width',n.pdeg>1?1.8:1); el._s=s;
+    }
+    el.setAttribute('stroke-width', el.getAttribute('stroke-width')||1);
+    el.style.cursor='pointer';
+    el.addEventListener('mouseenter',ev=>hover(n,ev));
+    el.addEventListener('mousemove',moveTip);
+    el.addEventListener('mouseleave',()=>tip.style.opacity=0);
+    el.addEventListener('pointerdown',ev=>startDrag(n,ev));
+    gN.appendChild(el);
+    let tl=null;
+    if(n.type==='org'&&n.pdeg>1){
+      tl=document.createElementNS(NS,'text');
+      tl.setAttribute('font-size','9'); tl.setAttribute('font-family','IBM Plex Mono, monospace');
+      tl.setAttribute('fill','#A9B7C0'); tl.setAttribute('text-anchor','middle');
+      tl.setAttribute('pointer-events','none');
+      tl.textContent=n.id.length>26?n.id.slice(0,25)+'…':n.id;
+      gL.appendChild(tl);
+    }
+    els.set(n.i,{el,tl});
+  });
+  drawSide(); kick(1);
+}
+function paint(){
+  root.setAttribute('transform',`translate(${tx+stage.clientWidth/2},${ty+stage.clientHeight/2}) scale(${k})`);
+  const hi=sel?neighbourhood(sel):null;
+  cur.E.forEach(e=>{
+    e.el.setAttribute('x1',e.s.x.toFixed(1)); e.el.setAttribute('y1',e.s.y.toFixed(1));
+    e.el.setAttribute('x2',e.t.x.toFixed(1)); e.el.setAttribute('y2',e.t.y.toFixed(1));
+    const on = !hi || (hi.has(e.s.i)&&hi.has(e.t.i));
+    e.el.setAttribute('opacity', on?REL[e.rel][3]*0.55:0.04);
+  });
+  cur.N.forEach(n=>{
+    const {el,tl}=els.get(n.i);
+    const on=!hi||hi.has(n.i);
+    if(n.type==='person'){ el.setAttribute('cx',n.x.toFixed(1)); el.setAttribute('cy',n.y.toFixed(1)); }
+    else { el.setAttribute('x',(n.x-el._s/2).toFixed(1)); el.setAttribute('y',(n.y-el._s/2).toFixed(1)); }
+    let vis=on;
+    if(q) vis = vis && n.id.toLowerCase().includes(q);
+    el.setAttribute('opacity', vis?1:(on?0.22:0.08));
+    if(n===sel){ el.setAttribute('stroke','#E8E4D9'); el.setAttribute('stroke-width',2.6); }
+    else { el.setAttribute('stroke', n.type==='person'?'#0E1417':(KC[n.kind]||'#8093A0'));
+           el.setAttribute('stroke-width', n.type==='org'&&n.pdeg>1?1.8:1); }
+    if(tl){ tl.setAttribute('x',n.x.toFixed(1)); tl.setAttribute('y',(n.y-9).toFixed(1));
+            tl.setAttribute('opacity', showLabels?(on?0.85:0.08):0); }
+  });
+}
+function neighbourhood(n){
+  const s=new Set([n.i]);
+  cur.E.forEach(e=>{ if(e.s===n) s.add(e.t.i); if(e.t===n) s.add(e.s.i); });
+  return s;
+}
+function hover(n,ev){
+  const inc=cur.E.filter(e=>e.s===n||e.t===n);
+  tip.innerHTML=`<b>${esc(n.id)}</b>${n.type==='person'
+    ? esc(n.title)+' · '+esc(n.org)
+    : (KL[n.kind]||n.kind)+' · '+(CN[n.cty]||n.cty)}
+    <s>${inc.length} link${inc.length===1?'':'s'}${n.type==='org'?' · '+n.pdeg+' participant'+(n.pdeg===1?'':'s'):''}</s>`;
+  tip.style.opacity=1; moveTip(ev);
+}
+function moveTip(ev){
+  const r=stage.getBoundingClientRect();
+  let x=ev.clientX-r.left+14, y=ev.clientY-r.top+14;
+  if(x>r.width-300)x-=314; if(y>r.height-100)y-=110;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ═══ side panel ═══ */
+
+function finBlock(n){
+  if(n.type==='org'){
+    if(!n.econ) return '';
+    return `<p class="kicker">Scale</p><p style="font-size:12px;line-height:1.6;margin:0;color:#A9B7C0">
+      <b style="color:var(--brass);font-size:16px">${money(n.econ)}</b> ${MET[n.metric]||''}
+      ${n.econG==='C'?'<span class="c1"> · grade C, indicative only</span>':n.econG==='B'?'<span class="c1"> · grade B</span>':''}</p>`;
+  }
+  let h='<p class="kicker">Financial position</p><p style="font-size:12px;line-height:1.6;margin:0;color:#A9B7C0">';
+  if(n.wlo!==undefined){
+    h+=`Personal wealth <b style="color:var(--brass);font-size:15px">${wRange(n)}</b><br>
+        <span style="color:#6E7C88">${n.wbasis==='listed'?'Published wealth-list estimate'
+        :n.wbasis==='derived'?'Derived from a disclosed stake or transaction':'From a public financial disclosure'} — ${esc(n.wnote)}</span>`;
+  } else if(n.wnone){
+    h+=`<span style="color:#6E7C88">No personal figure. ${esc(n.wnone)}.</span>`;
+  } else {
+    h+='<span style="color:#6E7C88">No published net-worth estimate exists for this person, and none has been invented.</span>';
+  }
+  if(n.ctrl) h+=`<br><br>Controlled institutional mass
+    <b style="color:var(--brass);font-size:15px">${money(n.ctrl)}</b>
+    <span style="color:#6E7C88">via ${esc(n.ctrlSrc.id)}</span>`;
+  return h+'</p>';
+}
+function chainBlock(n){
+  if(n.type!=='org') return '';
+  const ups=[], seen=new Set();
+  let cur0=n;
+  while(true){
+    const up=edges.find(e=>e.rel==='sub'&&e.t===cur0&&!seen.has(e.s.id));
+    if(!up) break; seen.add(up.s.id); ups.unshift(up.s); cur0=up.s;
+    if(ups.length>5) break;
+  }
+  const kids=edges.filter(e=>e.rel==='sub'&&e.s===n).map(e=>({n:e.t,note:e.note,g:e.g}));
+  if(!ups.length&&!kids.length) return '';
+  let h='<p class="kicker">Ownership chain</p><p style="font-size:12px;line-height:1.7;margin:0;color:#A9B7C0">';
+  if(ups.length) h+=ups.map(u=>`<span style="cursor:pointer;color:var(--brass)" data-i="${u.i}">${esc(u.id)}</span>`).join(' <span style="color:#4A5A66">▸</span> ')+' <span style="color:#4A5A66">▸</span> ';
+  h+=`<b>${esc(n.id)}</b></p>`;
+  if(kids.length){
+    h+=`<p style="font-size:11px;color:#6E7C88;margin:9px 0 3px">Holds ${kids.length}:</p>`;
+    h+=kids.map(k=>`<div class="edgeline" data-i="${k.n.i}">${esc(k.n.id)}
+      ${k.n.econ?`<span style="color:var(--brass)"> ${money(k.n.econ)}</span>`:''}
+      <s>${esc(k.note)}${k.g==='C'?' · grade C':''}</s></div>`).join('');
+  }
+  return h;
+}
+function drawSide(){
+  if(!sel){
+    const bridges=nodes.filter(n=>n.type==='org'&&n.pdeg>1).sort((a,b)=>b.pdeg-a.pdeg).slice(0,16);
+    const brokers=[...BW.entries()].sort((a,b)=>b[1]-a[1])
+      .map(([i,v])=>[nodes[i],v]).filter(([n])=>n.type==='person').slice(0,12);
+    const mass=nodes.filter(n=>n.econ).sort((a,b)=>b.econ-a.econ).slice(0,14);
+    const rich=nodes.filter(n=>n.whi).sort((a,b)=>b.whi-a.whi);
+    const ctrl=nodes.filter(n=>n.type==='person'&&n.ctrl).sort((a,b)=>b.ctrl-a.ctrl).slice(0,14);
+    side.innerHTML=`<p class="kicker">Institutional mass</p>
+      <ul class="plain" id="ulM">${mass.map(n=>
+        `<li data-i="${n.i}"><span class="sq" style="background:${KC[n.kind]||'#8093A0'}"></span>
+         <span>${esc(n.id)}<br><em>${MET[n.metric]||''}${n.econG==='C'?' · grade C':''}</em></span>
+         <b>${money(n.econ)}</b></li>`).join('')}</ul>
+      <p class="kicker">Controlled mass · by person</p>
+      <ul class="plain" id="ulK">${ctrl.map(n=>
+        `<li data-i="${n.i}"><span class="dot" style="background:${KC[n.kind]}"></span>
+         <span>${esc(n.id)}<br><em>via ${esc(n.ctrlSrc?n.ctrlSrc.id:'')}</em></span>
+         <b>${money(n.ctrl)}</b></li>`).join('')}</ul>
+      <p class="kicker">Published personal wealth · ${rich.length} of 128</p>
+      <ul class="plain" id="ulW">${rich.map(n=>
+        `<li data-i="${n.i}"><span class="dot" style="background:${KC[n.kind]}"></span>
+         <span>${esc(n.id)}<br><em>${n.wbasis==='listed'?'wealth-list estimate'
+           :n.wbasis==='derived'?'derived from a disclosed stake':'public financial disclosure'}</em></span>
+         <b>${wRange(n)}</b></li>`).join('')}</ul>
+      <p class="kicker">Shared institutions · by participants</p>
+      <ul class="plain" id="ulA">${bridges.map(n=>
+        `<li data-i="${n.i}"><span class="sq" style="background:${KC[n.kind]||'#8093A0'}"></span>
+         <span>${esc(n.id)}<br><em>${CN[n.cty]||n.cty}</em></span><b>${n.pdeg}</b></li>`).join('')}</ul>
+      <p class="kicker">Structural brokers · betweenness</p>
+      <ul class="plain" id="ulB">${brokers.map(([n,v])=>
+        `<li data-i="${n.i}"><span class="dot" style="background:${KC[n.kind]}"></span>
+         <span>${esc(n.id)}<br><em>${KL[n.kind]} · ${CN[n.cty]||n.cty}</em></span>
+         <b>${Math.round(v)}</b></li>`).join('')}</ul>`;
+  } else {
+    const inc=cur.E.filter(e=>e.s===sel||e.t===sel);
+    const ctys=new Set(), secs=new Set();
+    inc.forEach(e=>{ const o=e.s===sel?e.t:e.s; ctys.add(o.cty); secs.add(o.kind); });
+    side.innerHTML=`<h2 style="color:${KC[sel.kind]||'#E8E4D9'}">${esc(sel.id)}</h2>
+      <p class="meta">${sel.type==='person'?esc(sel.title)+' · '+esc(sel.org)
+        :(KL[sel.kind]||sel.kind)} &nbsp;/&nbsp; ${CN[sel.cty]||sel.cty}</p>
+      <p class="kicker">Reach</p>
+      <p style="font-size:12px;line-height:1.6;margin:0;color:#A9B7C0">
+        ${inc.length} link${inc.length===1?'':'s'} · touches
+        <b style="color:var(--brass)">${ctys.size}</b> countr${ctys.size===1?'y':'ies'} and
+        <b style="color:var(--brass)">${secs.size}</b> sector${secs.size===1?'':'s'} ·
+        betweenness <b style="color:var(--brass)">${Math.round(BW.get(sel.i)||0)}</b></p>
+      ${finBlock(sel)}
+      ${chainBlock(sel)}
+      <p class="kicker">Links</p>
+      ${inc.sort((a,b)=>a.tier-b.tier).map(e=>{const o=e.s===sel?e.t:e.s;
+        return `<div class="edgeline" data-i="${o.i}"><u style="color:${REL[e.rel][1]}">
+          ${REL[e.rel][0]}${e.g==='B'?' <span class="c1">· grade B</span>':''}</u>
+          ${esc(o.id)}<s>${esc(e.note)}</s></div>`;}).join('')}
+      <p class="kicker">&nbsp;</p>
+      <button class="ghost" id="clearSel">Back to overview</button>`;
+    const c=document.getElementById('clearSel');
+    if(c) c.addEventListener('click',()=>{sel=null;drawSide();paint();});
+  }
+  side.querySelectorAll('[data-i]').forEach(el=>{
+    el.addEventListener('click',()=>{ sel=nodes[+el.dataset.i]; drawSide(); paint();
+      tx=-sel.x*k; ty=-sel.y*k; paint(); });
+  });
+}
+
+/* ═══ interaction ═══ */
+let drag=null, pan=null;
+function startDrag(n,ev){
+  ev.stopPropagation(); ev.preventDefault();
+  drag={n, moved:false}; n.fixed=true;
+  svg.setPointerCapture(ev.pointerId);
+}
+svg.addEventListener('pointermove',ev=>{
+  if(drag){ drag.moved=true;
+    const r=stage.getBoundingClientRect();
+    drag.n.x=(ev.clientX-r.left-stage.clientWidth/2-tx)/k;
+    drag.n.y=(ev.clientY-r.top-stage.clientHeight/2-ty)/k;
+    kick(Math.max(alpha,.35)); paint(); }
+  else if(pan){ tx=pan.tx+(ev.clientX-pan.x); ty=pan.ty+(ev.clientY-pan.y); paint(); }
+});
+svg.addEventListener('pointerup',ev=>{
+  if(drag){ if(!drag.moved){ sel = sel===drag.n?null:drag.n; drawSide(); }
+    drag.n.fixed=false; drag=null; paint(); }
+  pan=null; stage.classList.remove('drag');
+});
+stage.addEventListener('pointerdown',ev=>{
+  if(drag) return;
+  pan={x:ev.clientX,y:ev.clientY,tx,ty}; stage.classList.add('drag');
+});
+stage.addEventListener('wheel',ev=>{
+  ev.preventDefault();
+  const f=ev.deltaY<0?1.12:1/1.12, nk=Math.max(.25,Math.min(4,k*f));
+  const r=stage.getBoundingClientRect();
+  const mx=ev.clientX-r.left-stage.clientWidth/2, my=ev.clientY-r.top-stage.clientHeight/2;
+  tx=mx-(mx-tx)*(nk/k); ty=my-(my-ty)*(nk/k); k=nk; paint();
+},{passive:false});
+
+document.querySelectorAll('#modes button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#modes button').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true'); mode=b.dataset.m; sel=null; rebuild();
+}));
+document.querySelectorAll('#grades button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#grades button').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true'); grade=b.dataset.g; sel=null; rebuild();
+}));
+document.getElementById('q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();paint();});
+document.getElementById('lbl').addEventListener('change',e=>{showLabels=e.target.checked;paint();});
+document.getElementById('reset').addEventListener('click',()=>{
+  sel=null; q=''; document.getElementById('q').value=''; tx=ty=0; k=1;
+  nodes.forEach(n=>{n.x=n.y=0;}); rebuild();
+});
+window.addEventListener('resize',paint);
+rebuild();
+</script>
+</body>
+</html>

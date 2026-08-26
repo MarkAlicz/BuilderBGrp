@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Affiliation Map — 128 Participants</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E1417; --ground:#131C21; --panel:#18232A; --rule:#26343D;
+  --bone:#E8E4D9; --muted:#8093A0; --brass:#C9A227;
+  --gov:#6D8CFF; --def:#FF8A3D; --dind:#FF5A5A; --mult:#2BD9A8; --fin:#FFC53D;
+  --tech:#A98BFF; --nrg:#57D96B; --ind:#3FC7E0; --med:#FF6FA5; --acad:#C99A6B;
+  --hlth:#A8D93F; --cult:#E07BFF; --roy:#9AA7B0;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--ink);color:var(--bone);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1360px;margin:0 auto;padding:28px 22px 60px}
+
+/* ── masthead ───────────────────────────────────────── */
+header{border-bottom:1px solid var(--rule);padding-bottom:18px;margin-bottom:20px}
+h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(26px,4.2vw,46px);
+   letter-spacing:-.025em;line-height:1;margin:0 0 10px}
+h1 em{font-style:normal;color:var(--brass)}
+.deck{color:var(--muted);font-size:14px;max-width:66ch;line-height:1.55;margin:0}
+.tally{display:flex;flex-wrap:wrap;gap:0;margin-top:16px;font-family:"IBM Plex Mono",monospace}
+.tally div{padding-right:26px;margin-right:26px;border-right:1px solid var(--rule)}
+.tally div:last-child{border-right:0}
+.tally b{display:block;font-size:23px;font-weight:600;letter-spacing:-.02em}
+.tally span{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* ── controls ───────────────────────────────────────── */
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.tabs{display:inline-flex;border:1px solid var(--rule);border-radius:2px;overflow:hidden}
+.tabs button{background:transparent;border:0;border-right:1px solid var(--rule);color:var(--muted);
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  padding:9px 15px;cursor:pointer;transition:background .15s,color .15s}
+.tabs button:last-child{border-right:0}
+.tabs button:hover{color:var(--bone)}
+.tabs button[aria-selected="true"]{background:var(--brass);color:var(--ink);font-weight:600}
+.tabs button:focus-visible,.chip:focus-visible,input:focus-visible,.rl li:focus-visible,.cell:focus-visible{
+  outline:2px solid var(--brass);outline-offset:2px}
+input[type=search]{flex:1 1 200px;min-width:170px;background:var(--ground);border:1px solid var(--rule);
+  border-radius:2px;color:var(--bone);font-family:"IBM Plex Mono",monospace;font-size:12px;padding:9px 12px}
+input[type=search]::placeholder{color:var(--muted)}
+.ghost{background:transparent;border:1px solid var(--rule);border-radius:2px;color:var(--muted);
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  padding:9px 14px;cursor:pointer}
+.ghost:hover{color:var(--bone);border-color:var(--bone)}
+
+.legend{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--rule);
+  border-radius:2px;padding:4px 9px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  color:var(--muted);cursor:pointer;transition:.15s}
+.chip:hover{color:var(--bone)}
+.chip[aria-pressed="true"]{color:var(--ink);font-weight:600}
+.chip i{width:8px;height:8px;flex:none;border-radius:50%}
+.chip u{text-decoration:none;opacity:.6;font-size:9.5px}
+
+/* ── layout ─────────────────────────────────────────── */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 336px;gap:18px;align-items:start}
+@media(max-width:940px){.grid{grid-template-columns:1fr}}
+.stage{position:relative;background:var(--ground);border:1px solid var(--rule);border-radius:2px;overflow:hidden}
+svg{display:block;width:100%;height:auto}
+.node{cursor:pointer;transition:transform .7s cubic-bezier(.4,0,.2,1)}
+.node circle{transition:r .18s,stroke-width .18s,opacity .25s}
+.node.off{opacity:.09}
+.glab text{transition:opacity .3s}
+.glab text{cursor:pointer}
+@media(prefers-reduced-motion:reduce){.node,.node circle,.glab text{transition:none}}
+
+.tip{position:absolute;pointer-events:none;z-index:9;opacity:0;transition:opacity .12s;
+  background:#0A0F12;border:1px solid var(--brass);border-radius:2px;padding:8px 10px;max-width:270px;
+  font-size:11.5px;line-height:1.45;box-shadow:0 8px 26px rgba(0,0,0,.6)}
+.tip b{font-family:"Space Grotesk",sans-serif;display:block;font-size:13px;margin-bottom:2px}
+.tip span{color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:10px}
+
+/* ── matrix ─────────────────────────────────────────── */
+.mx{padding:14px;overflow:auto}
+.mxgrid{display:grid;gap:2px;min-width:640px;font-family:"IBM Plex Mono",monospace}
+.mxhead{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  writing-mode:vertical-rl;transform:rotate(180deg);height:96px;display:flex;align-items:flex-end;
+  justify-content:flex-start;padding-bottom:4px}
+.mxrow{font-size:10.5px;color:var(--muted);display:flex;align-items:center;justify-content:flex-end;
+  padding-right:8px;white-space:nowrap}
+.cell{border:0;background:transparent;aspect-ratio:1;min-height:22px;display:flex;align-items:center;
+  justify-content:center;font-size:10.5px;color:var(--bone);cursor:pointer;border-radius:1px}
+.cell.z{color:#2A3740;cursor:default}
+.cell:hover:not(.z){outline:1px solid var(--bone)}
+
+/* ── side panel ─────────────────────────────────────── */
+.side{background:var(--ground);border:1px solid var(--rule);border-radius:2px;padding:16px}
+.side h2{font-family:"Space Grotesk",sans-serif;font-size:18px;line-height:1.15;margin:0 0 4px;
+  letter-spacing:-.01em}
+.role{font-size:12.5px;line-height:1.5;color:var(--bone);margin:0 0 8px}
+.meta{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 14px}
+.kicker{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--brass);border-bottom:1px solid var(--rule);padding-bottom:6px;margin:0 0 10px}
+.rl{list-style:none;margin:0;padding:0;max-height:330px;overflow:auto}
+.rl li{padding:6px 8px;border-left:2px solid transparent;cursor:pointer;font-size:12px;line-height:1.3;
+  display:flex;justify-content:space-between;gap:8px}
+.rl li:hover{background:var(--panel)}
+.rl li.cur{background:var(--panel);border-left-color:var(--brass)}
+.rl li small{font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:var(--muted);flex:none;padding-top:2px}
+.empty{color:var(--muted);font-size:12.5px;line-height:1.55}
+footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--rule);color:var(--muted);
+  font-size:11.5px;line-height:1.6;max-width:78ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Affiliation map — <em>128 participants</em></h1>
+  <p class="deck">Each node is one person, placed in the cluster matching their stated affiliation.
+     Switch projection to re-cluster the same roster by delegation, or read the whole thing as a
+     sector × delegation cross-tab. Selecting a person draws their peer set as chords.</p>
+  <div class="tally">
+    <div><b>128</b><span>People</span></div>
+    <div><b>13</b><span>Sectors</span></div>
+    <div><b>23</b><span>Delegations</span></div>
+    <div><b id="tShown">128</b><span>In view</span></div>
+  </div>
+</header>
+
+<div class="controls" role="tablist" aria-label="Projection">
+  <div class="tabs">
+    <button role="tab" data-v="s" aria-selected="true">By sector</button>
+    <button role="tab" data-v="c" aria-selected="false">By delegation</button>
+    <button role="tab" data-v="m" aria-selected="false">Cross-tab</button>
+  </div>
+  <input type="search" id="q" placeholder="Search name, role, or organisation" aria-label="Search roster">
+  <button class="ghost" id="reset">Clear</button>
+</div>
+
+<div class="legend" id="legend"></div>
+
+<div class="grid">
+  <div class="stage" id="stage">
+    <svg id="svg" role="img" aria-label="Affiliation cluster map"></svg>
+    <div class="mx" id="mx" hidden></div>
+    <div class="tip" id="tip" aria-hidden="true"></div>
+  </div>
+  <aside class="side">
+    <div id="detail"><p class="empty">Select a node, a cluster label, or a legend chip.<br><br>
+      In <b>sector</b> projection the chords link fellow nationals. In <b>delegation</b> projection they
+      link sector peers.</p></div>
+    <p class="kicker" id="rlHead">Roster · 128</p>
+    <ul class="rl" id="roster"></ul>
+  </aside>
+</div>
+
+<footer>
+  Classification is mine, derived from each person's single stated title and organisation — several
+  are genuinely dual-coded (Palantir and Anduril sit under Technology and Defence Industry respectively;
+  central bank governors sit under Government, not Finance; NATO and EU officeholders sit under
+  Multilateral regardless of passport). Ring position carries no meaning beyond packing.
+</footer>
+</div>
+
+<script>
+const SEC={
+ gov:['Government & Politics','#6D8CFF'], def:['Defence, Security & Intelligence','#FF8A3D'],
+ dind:['Defence Industry','#FF5A5A'],    mult:['Multilateral & Supranational','#2BD9A8'],
+ fin:['Finance & Investment','#FFC53D'], tech:['Technology & AI','#A98BFF'],
+ nrg:['Energy','#57D96B'],               ind:['Industrials & Business','#3FC7E0'],
+ med:['Media & Publishing','#FF6FA5'],   acad:['Academia & Think Tanks','#C99A6B'],
+ hlth:['Health & Life Sciences','#A8D93F'],cult:['Culture & Civil Society','#E07BFF'],
+ roy:['Head of State (Royal)','#9AA7B0']
+};
+const SORD=['gov','def','dind','mult','fin','tech','nrg','ind','med','acad','hlth','cult','roy'];
+const CN={USA:'United States',GBR:'United Kingdom',FRA:'France',DEU:'Germany',INT:'International org.',
+ ITA:'Italy',NLD:'Netherlands',IRL:'Ireland',TUR:'Türkiye',SWE:'Sweden',POL:'Poland',FIN:'Finland',
+ ESP:'Spain',CHE:'Switzerland',DNK:'Denmark',BEL:'Belgium',AUT:'Austria',PRT:'Portugal',NOR:'Norway',
+ GRC:'Greece',UKR:'Ukraine',CAN:'Canada',GRL:'Greenland'};
+
+const D=[
+['Stacey Abrams','USA','CEO','Sage Works Production','med'],
+['Marco Alverà','ITA','Co-Founder / CEO','zhero.net; TES','nrg'],
+['Anne Applebaum','USA','Staff Writer','The Atlantic','med'],
+['Murray Auchincloss','GBR','Former CEO','BP plc','nrg'],
+['José Manuel Barroso','PRT','Chair, International Advisors','Goldman Sachs International','fin'],
+['Adam Bartosiewicz','POL','Vice President','WB Group','dind'],
+['Valérie Baudson','FRA','CEO','Amundi SA','fin'],
+['Caroline Berg','SWE','CEO','Axel Johnson','ind'],
+['Fatih Birol','INT','Executive Director','International Energy Agency','mult'],
+['Harold Boël','BEL','CEO','Sofina','fin'],
+['Peter Bosek','AUT','CEO & Chief Retail Officer','Erste Group Bank AG','fin'],
+['Albert Bourla','USA','Chair and CEO','Pfizer Inc.','hlth'],
+['Helene Budliger','CHE','State Secretary for Economic Affairs','Government of Switzerland','gov'],
+['Douglas Burgum','USA','Secretary of the Interior','US Government','gov'],
+['Roland Busch','DEU','President and CEO','Siemens AG','ind'],
+['Nadia Calviño','INT','President','European Investment Bank','mult'],
+['Aaro Cantell','FIN','Chair','Normet Group','ind'],
+['Henri de Castries','FRA','President','Institut Montaigne','acad'],
+['Camilla Cavendish','GBR','Member','House of Lords','gov'],
+['Jack Chambers','IRL','Minister for Public Expenditure & Digitalisation','Government of Ireland','gov'],
+['Jeppe Christiansen','DNK','CEO','Maj Invest Group','fin'],
+['Jack Clark','USA','Co-Founder & Head of Public Benefit','Anthropic PBC','tech'],
+['Vittorio Colao','ITA','Vice Chair EMEA','General Atlantic','fin'],
+['Patrick Collison','IRL','CEO','Stripe','tech'],
+['Mathias Döpfner','DEU','Chair and CEO','Axel Springer SE','med'],
+['Daniel P. Driscoll','USA','Secretary of the Army','US Government','def'],
+['Elizabeth Economy','USA','Hargrove Senior Fellow','Stanford University','acad'],
+['Daniel Ek','SWE','Chair','Spotify SA','tech'],
+['Øyvind Eriksen','NOR','President and CEO','Aker ASA','ind'],
+['José Luis Escrivá','ESP','Governor','Bank of Spain','gov'],
+['Niall Ferguson','USA','Milbank Family Senior Fellow','Stanford University','acad'],
+['Rana Foroohar','USA','Associate Editor','Financial Times','med'],
+['Chrystia Freeland','CAN','Special Rep. for the Reconstruction of Ukraine','Government of Canada','gov'],
+['Jeanette zu Fürstenberg','DEU','Managing Director','General Catalyst','fin'],
+['Pilar Gil','ESP','CEO','PRISA Media','med'],
+['Jamieson Greer','USA','US Trade Representative','US Government','gov'],
+['Karl-Theodor zu Guttenberg','DEU','Chair','Spitzberg Partners LLC','fin'],
+['Kevin Harrington','USA','Fmr Sr. Director, Strategic Planning','National Security Council','def'],
+['Demis Hassabis','GBR','Co-Founder and CEO','Google DeepMind','tech'],
+['Anne Heraty','IRL','Chair','Sherry FitzGerald; IBEC','ind'],
+['André Hoffmann','CHE','Vice Chair','Roche Holding Ltd.','hlth'],
+['Uwe Horstmann','DEU','CEO','Stark','dind'],
+['Colin Hunt','IRL','CEO','AIB Group plc','fin'],
+['Roy Jakobs','NLD','President and CEO','Royal Philips','hlth'],
+['Rob Jetten','NLD','Prime Minister','Government of the Netherlands','gov'],
+['Pål Jonson','SWE','Minister for Defence','Government of Sweden','def'],
+['Sigrid Kaag','NLD','Co-Chair, Board of Directors','United Nations Foundation','mult'],
+['Kimberly Kagan','USA','President','Institute for the Study of War','acad'],
+['Oleksandr Kamyshin','UKR','Advisor to the President, Strategic Affairs','Government of Ukraine','gov'],
+['Alex Karp','USA','CEO','Palantir Technologies Inc.','tech'],
+['David Kirtley','USA','CEO','Helion Energy','nrg'],
+['Ali Koç','TUR','Vice Chair','Koç Holding','ind'],
+['Wojciech Kostrzewa','POL','President','Polish Business Roundtable','ind'],
+['Stephen Kotkin','USA','Senior Fellow','Hoover Institution, Stanford','acad'],
+['Michael Kratsios','USA','Director','White House OSTP','gov'],
+['Henry R. Kravis','USA','Co-Founder & Co-Executive Chair','Kohlberg Kravis Roberts & Co.','fin'],
+['Marie-Josée Kravis','USA','Chair','The Museum of Modern Art','cult'],
+['Andrius Kubilius','INT','Commissioner, Defence and Space','European Commission','mult'],
+['André Kudelski','CHE','Chair and CEO','Kudelski Group SA','tech'],
+['David Lammy','GBR','Deputy PM; Justice Secretary','UK Government','gov'],
+['Markus Laubenthal','INT','General and Chief of Staff','SHAPE (NATO)','def'],
+['Geoffrey van Leeuwen','INT','Chief of Staff, Office of the Sec. General','NATO','mult'],
+['Roland Lescure','FRA','Minister for Economy, Finance and Industry','Government of France','gov'],
+['Enrico Letta','ITA','Dean','IE School of Politics, Economics & Global Affairs','acad'],
+['Thomas Leysen','BEL','Chair','dsm-firmenich AG','ind'],
+['Robert Lighthizer','USA','Chair','Center for American Trade','acad'],
+['Erkki Liikanen','FIN','Chair, Trustees','IFRS Foundation','mult'],
+['Catherine MacGregor','FRA','CEO Group','ENGIE','nrg'],
+['Danny McCoy','IRL','CEO','Ibec','ind'],
+['Brett McGurk','USA','Global Affairs Analyst','CNN','med'],
+['Ross McInnes','FRA','President','Safran Group','dind'],
+['Britt Meelby Jensen','DNK','CEO','Ambu A/S','hlth'],
+['Arthur Mensch','FRA','Co-Founder and CEO','Mistral AI','tech'],
+['Blaise Metreweli','GBR','Chief','Secret Intelligence Service','def'],
+['John Micklethwait','USA','Editor-in-Chief','Bloomberg LP','med'],
+['Zanny Minton Beddoes','GBR','Editor-in-Chief','The Economist','med'],
+['Duarte Moreira','PRT','Co-Founder and CEO','Zeno Partners','fin'],
+['Vivian Motzfeldt','GRL','Former Minister of Foreign Affairs','Government of Greenland','gov'],
+['Guta Moura Guedes','PRT','Chair and Co-Founder','ExperimentaDesign','cult'],
+['Mira Murati','USA','CEO','Thinking Machines Lab','tech'],
+['Alberto Nadal','ESP','Shadow Economic Minister','Popular Party','gov'],
+['H.M. the King of the Netherlands','NLD','Head of State','House of Orange-Nassau','roy'],
+['H.M. the Queen of the Netherlands','NLD','Consort','House of Orange-Nassau','roy'],
+['Jacek Olechowski','POL','Founder','Mediacap','med'],
+['Peter R. Orszag','USA','CEO and Chair','Lazard','fin'],
+['Murat Özyeğin','TUR','Chair','Fiba Group','fin'],
+['Dimitri Papalexopoulos','GRC','Chair','TITAN SA','ind'],
+['Samuel Paparo','USA','Commander','US Indo-Pacific Command','def'],
+['Skye Perryman','USA','President and CEO','Democracy Forward','cult'],
+['Kyriakos Pierrakakis','GRC','Minister of Economy and Finance','Government of Greece','gov'],
+['Patrick Pouyanné','FRA','Chair and CEO','TotalEnergies SE','nrg'],
+['Gideon Rachman','GBR','Chief Foreign Affairs Commentator','Financial Times','med'],
+['Rolly van Rappard','NLD','Co-Founder and Chair','CVC Capital Partners','fin'],
+['Nicolas Roche','FRA','Secretary General','SGDSN — Defence & National Security','def'],
+['Silvia Maria Rovere','ITA','Chair','Poste Italiane S.p.A.','ind'],
+['Mark Rutte','INT','Secretary General','NATO','mult'],
+['John Sawers','GBR','Executive Chair','Newbridge Advisory Ltd.','def'],
+['Costantza Sbokou-Constantakopoulou','GRC','Goodwill Ambassador','UNESCO','cult'],
+['Nadia Schadlow','USA','Senior Fellow','Hudson Institute','acad'],
+['Gundbert Scherf','DEU','Co-Founder and Co-CEO','Helsing GmbH','dind'],
+['Brian Schimpf','USA','Co-Founder and CEO','Anduril Industries','dind'],
+['Eric E. Schmidt','USA','Executive Chair and CEO','Relativity Space Inc','tech'],
+['Mark Sedwill','GBR','Chair of Trustees','IISS','acad'],
+['Terri Sewell','USA','Member of Congress','US House of Representatives','gov'],
+['Christian Sewing','DEU','CEO','Deutsche Bank AG','fin'],
+['Faryar Shirzad','USA','Chief Policy Officer','Coinbase','fin'],
+['Radosław Sikorski','POL','Minister of Foreign Affairs','Government of Poland','gov'],
+['Feridun H. Sinirlioğlu','TUR','Secretary General','OSCE','mult'],
+['Brad Smith','USA','Vice Chair and President','Microsoft Corporation','tech'],
+['Jason Smith','USA','Member of Congress','US House of Representatives','gov'],
+['Jens Stoltenberg','NOR','Minister of Finance','Government of Norway','gov'],
+['Alexander Stubb','FIN','President of the Republic','Republic of Finland','gov'],
+['Petra De Sutter','BEL','Rector','Ghent University','acad'],
+['Nicolai Tangen','NOR','CEO','Norges Bank Investment Management','fin'],
+['Mehmet Tara','TUR','President and Chair','Enka Holding','ind'],
+['Iryna Terekh','UKR','CEO and CTO','Fire Point LLC','dind'],
+['Anna Thalhammer','AUT','Editor-in-Chief','Profil','med'],
+['Mark Tucker','GBR','Chair','AIA Group Ltd','fin'],
+['Valentino Valentini','ITA','Deputy Minister of Enterprise','Government of Italy','gov'],
+['Elina Valtonen','FIN','Minister of Foreign Affairs','Government of Finland','gov'],
+['Luis Vassy','FRA','President','Sciences Po','acad'],
+['Margrethe Vestager','DNK','Chair','Danish Technical University','acad'],
+['Marcus Wallenberg','SWE','Chair','Skandinaviska Enskilda Banken AB','fin'],
+['Alexandr Wang','USA','Chief AI Officer','Meta','tech'],
+['Fareed Zakaria','USA','Host','Fareed Zakaria GPS (CNN)','med'],
+['Ayşe Zarakol','TUR','Professor of International Relations','University of Cambridge','acad'],
+['Gerhard Zeiler','AUT','President','Warner Bros. Discovery International','med'],
+['Oliver Zipse','DEU','Chair','BMW AG','ind']
+];
+
+const NS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('svg'), tip=document.getElementById('tip'),
+      mxEl=document.getElementById('mx'), detail=document.getElementById('detail'),
+      roster=document.getElementById('roster'), legend=document.getElementById('legend'),
+      qIn=document.getElementById('q'), rlHead=document.getElementById('rlHead'),
+      tShown=document.getElementById('tShown');
+let view='s', sel=-1, isoSec=null, isoCty=null, q='';
+
+/* ── radial packing ─────────────────────────────────── */
+function build(keyIdx, order){
+  const map={};
+  D.forEach((d,i)=>{ (map[d[keyIdx]] = map[d[keyIdx]]||[]).push(i); });
+  const keys = order || Object.keys(map).sort((a,b)=>map[b].length-map[a].length||a.localeCompare(b));
+  const gs = keys.filter(k=>map[k]).map(k=>({key:k,items:map[k]}));
+  gs.forEach(g=>g.r = 6.4*Math.sqrt(g.items.length)+11);
+  let lo=40, hi=6000, R;
+  for(let it=0; it<80; it++){
+    R=(lo+hi)/2;
+    let s=0; gs.forEach(g=>s += 2*Math.asin(Math.min(.999,g.r/R)));
+    if(s*1.30 > Math.PI*2) lo=R; else hi=R;
+  }
+  R=hi;
+  const w=gs.map(g=>2*Math.asin(Math.min(.999,g.r/R)));
+  const slack=(Math.PI*2 - w.reduce((a,b)=>a+b,0))/gs.length;
+  let ang=-Math.PI/2; const pos={}; let ext=0;
+  gs.forEach((g,gi)=>{
+    ang += w[gi]/2 + slack/2;
+    g.ang=ang; g.cx=Math.cos(ang)*R; g.cy=Math.sin(ang)*R;
+    ang += w[gi]/2 + slack/2;
+    const n=g.items.length;
+    g.items.forEach((idx,j)=>{
+      const rr = n===1?0 : g.r*0.80*Math.sqrt((j+0.5)/n), th = j*2.399963;
+      pos[idx]={x:g.cx+rr*Math.cos(th), y:g.cy+rr*Math.sin(th)};
+    });
+    ext=Math.max(ext, R+g.r);
+  });
+  return {gs,R,pos,ext};
+}
+const LS=build(4,SORD), LC=build(1,null);
+const EXT=Math.max(LS.ext,LC.ext)+132, VB=EXT*2;
+svg.setAttribute('viewBox',`0 0 ${VB.toFixed(0)} ${VB.toFixed(0)}`);
+
+const root=el('g',{transform:`translate(${EXT},${EXT})`}); svg.appendChild(root);
+const gLinks=el('g'); root.appendChild(gLinks);
+const gLabS=el('g',{class:'glab'}), gLabC=el('g',{class:'glab'});
+root.appendChild(gLabS); root.appendChild(gLabC);
+const gNodes=el('g'); root.appendChild(gNodes);
+
+function el(t,a){const n=document.createElementNS(NS,t); for(const k in a||{}) n.setAttribute(k,a[k]); return n;}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function labels(L,parent,isSec){
+  L.gs.forEach(g=>{
+    const rad=L.R+g.r+17, x=Math.cos(g.ang)*rad, y=Math.sin(g.ang)*rad, c=Math.cos(g.ang);
+    const t=el('text',{x:x.toFixed(1),y:y.toFixed(1),
+      'text-anchor': c>.15?'start':(c<-.15?'end':'middle'),
+      'dominant-baseline':'middle','font-size':'13','font-weight':'600',
+      'font-family':'Space Grotesk, sans-serif',
+      fill: isSec?SEC[g.key][1]:'#E8E4D9'});
+    t.textContent = (isSec?SEC[g.key][0]:(CN[g.key]||g.key)) + '  ' + g.items.length;
+    t.addEventListener('click',()=>{
+      if(isSec){isoSec = isoSec===g.key?null:g.key;} else {isoCty = isoCty===g.key?null:g.key;}
+      sel=-1; render();
+    });
+    parent.appendChild(t);
+  });
+}
+labels(LS,gLabS,true); labels(LC,gLabC,false);
+
+const N = D.map((d,i)=>{
+  const g=el('g',{class:'node'});
+  const c=el('circle',{r:'4.8',fill:SEC[d[4]][1],stroke:'#0E1417','stroke-width':'1'});
+  g.appendChild(c); gNodes.appendChild(g);
+  g.addEventListener('mouseenter',e=>hover(i,e));
+  g.addEventListener('mousemove',move);
+  g.addEventListener('mouseleave',()=>{tip.style.opacity=0;});
+  g.addEventListener('click',e=>{e.stopPropagation(); sel = sel===i?-1:i; render();});
+  return {g,c};
+});
+
+function hover(i,e){
+  const d=D[i];
+  tip.innerHTML=`<b>${esc(d[0])}</b>${esc(d[2])}${d[2]?', ':''}${esc(d[3])}<br>
+    <span>${esc(CN[d[1]]||d[1])} · ${esc(SEC[d[4]][0])}</span>`;
+  tip.style.opacity=1; move(e);
+}
+function move(e){
+  const r=document.getElementById('stage').getBoundingClientRect();
+  let x=e.clientX-r.left+14, y=e.clientY-r.top+14;
+  if(x>r.width-282) x-=296;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+
+/* ── matrix ─────────────────────────────────────────── */
+const CORD=LC.gs.map(g=>g.key);
+function buildMatrix(){
+  const g=document.createElement('div');
+  g.className='mxgrid';
+  g.style.gridTemplateColumns=`128px repeat(${SORD.length},minmax(22px,1fr)) 40px`;
+  g.appendChild(document.createElement('div'));
+  SORD.forEach(s=>{
+    const h=document.createElement('div'); h.className='mxhead';
+    h.textContent=SEC[s][0].split(' ')[0]; h.style.color=SEC[s][1]; g.appendChild(h);
+  });
+  const tot=document.createElement('div'); tot.className='mxhead'; tot.textContent='Total'; g.appendChild(tot);
+  const max=Math.max(...CORD.map(c=>Math.max(...SORD.map(s=>D.filter(d=>d[1]===c&&d[4]===s).length))));
+  CORD.forEach(c=>{
+    const lab=document.createElement('div'); lab.className='mxrow';
+    lab.textContent=CN[c]||c; g.appendChild(lab);
+    let rowTot=0;
+    SORD.forEach(s=>{
+      const n=D.filter(d=>d[1]===c&&d[4]===s).length; rowTot+=n;
+      const b=document.createElement('button');
+      b.className='cell'+(n?'':' z'); b.textContent=n||'·';
+      if(n){
+        b.style.background=SEC[s][1]+Math.round(38+ (n/max)*200).toString(16).padStart(2,'0');
+        b.style.color = n/max>0.45 ? '#0E1417':'#E8E4D9';
+        b.title=`${CN[c]||c} × ${SEC[s][0]} — ${n}`;
+        b.addEventListener('click',()=>{isoCty=c; isoSec=s; sel=-1; setView('s');});
+      } else b.disabled=true;
+      g.appendChild(b);
+    });
+    const rt=document.createElement('div'); rt.className='cell';
+    rt.style.color='#8093A0'; rt.textContent=rowTot; g.appendChild(rt);
+  });
+  mxEl.innerHTML=''; mxEl.appendChild(g);
+}
+buildMatrix();
+
+/* ── legend ─────────────────────────────────────────── */
+SORD.forEach(k=>{
+  const b=document.createElement('button');
+  b.className='chip'; b.setAttribute('aria-pressed','false'); b.dataset.k=k;
+  b.innerHTML=`<i style="background:${SEC[k][1]}"></i>${esc(SEC[k][0])} <u>${D.filter(d=>d[4]===k).length}</u>`;
+  b.addEventListener('click',()=>{isoSec = isoSec===k?null:k; sel=-1; if(view==='m') setView('s'); else render();});
+  legend.appendChild(b);
+});
+
+/* ── render ─────────────────────────────────────────── */
+function visible(i){
+  const d=D[i];
+  if(isoSec && d[4]!==isoSec) return false;
+  if(isoCty && d[1]!==isoCty) return false;
+  if(q && !(d[0]+' '+d[2]+' '+d[3]).toLowerCase().includes(q)) return false;
+  return true;
+}
+function render(){
+  const L = view==='c' ? LC : LS;
+  gLabS.style.display = view==='c'?'none':'';
+  gLabC.style.display = view==='c'?'':'none';
+  const peers=[];
+  if(sel>=0){ const k = view==='c'?4:1;
+    D.forEach((d,i)=>{ if(i!==sel && d[k]===D[sel][k]) peers.push(i); }); }
+
+  let shown=0;
+  D.forEach((d,i)=>{
+    const p=L.pos[i], n=N[i];
+    n.g.setAttribute('transform',`translate(${p.x.toFixed(1)},${p.y.toFixed(1)})`);
+    let on = visible(i);
+    if(sel>=0) on = on || i===sel || peers.includes(i);
+    if(on) shown++;
+    n.g.setAttribute('class','node'+(on?'':' off'));
+    const isSel=i===sel, isPeer=sel>=0&&peers.includes(i);
+    n.c.setAttribute('r', isSel?9:(isPeer?6.4:4.8));
+    n.c.setAttribute('stroke', isSel?'#E8E4D9':'#0E1417');
+    n.c.setAttribute('stroke-width', isSel?2.4:1);
+  });
+  tShown.textContent = sel>=0 ? peers.length+1 : shown;
+
+  gLinks.innerHTML='';
+  if(sel>=0){
+    const a=L.pos[sel];
+    peers.forEach(k=>{
+      const b=L.pos[k];
+      const path=el('path',{
+        d:`M${a.x.toFixed(1)} ${a.y.toFixed(1)} Q${(a.x+b.x)*0.2} ${(a.y+b.y)*0.2} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`,
+        fill:'none', stroke:SEC[D[sel][4]][1], 'stroke-width':'1.2', opacity:'.5'});
+      gLinks.appendChild(path);
+    });
+  }
+  drawDetail(peers);
+  drawRoster();
+  [...legend.children].forEach(c=>{
+    const on = isoSec===c.dataset.k;
+    c.setAttribute('aria-pressed', on?'true':'false');
+    c.style.background = on?SEC[c.dataset.k][1]:'transparent';
+    c.style.borderColor = on?SEC[c.dataset.k][1]:'';
+  });
+}
+
+function drawDetail(peers){
+  if(sel<0){
+    let s='<p class="empty">Select a node, a cluster label, or a legend chip.<br><br>In <b>sector</b> projection the chords link fellow nationals. In <b>delegation</b> projection they link sector peers.</p>';
+    if(isoSec||isoCty){
+      const f=D.filter((d,i)=>visible(i));
+      s=`<h2>${esc(isoCty?(CN[isoCty]||isoCty):SEC[isoSec][0])}</h2>
+         <p class="meta">${isoSec&&isoCty?esc(SEC[isoSec][0])+' · ':''}${f.length} of 128</p>`;
+      const by={}; f.forEach(d=>{ const k=isoCty?SEC[d[4]][0]:(CN[d[1]]||d[1]); by[k]=(by[k]||0)+1; });
+      s+='<p class="kicker">Breakdown</p><p class="role">'+
+        Object.entries(by).sort((a,b)=>b[1]-a[1])
+        .map(([k,v])=>`${esc(k)} <b style="color:var(--brass)">${v}</b>`).join(' &nbsp;· ')+'</p>';
+    }
+    detail.innerHTML=s; return;
+  }
+  const d=D[sel];
+  detail.innerHTML=`
+    <h2 style="color:${SEC[d[4]][1]}">${esc(d[0])}</h2>
+    <p class="role">${esc(d[2])}${d[2]?' · ':''}${esc(d[3])}</p>
+    <p class="meta">${esc(CN[d[1]]||d[1])} &nbsp;/&nbsp; ${esc(SEC[d[4]][0])}</p>
+    <p class="kicker">${view==='c'?'Sector peers':'Same delegation'} · ${peers.length}</p>
+    <p class="role" style="color:var(--muted)">${peers.length
+      ? peers.map(k=>`<span style="color:${SEC[D[k][4]][1]}">●</span> ${esc(D[k][0])}`).join('<br>')
+      : 'Sole representative.'}</p>`;
+}
+
+function drawRoster(){
+  const idx=D.map((d,i)=>i).filter(visible).sort((a,b)=>D[a][0].localeCompare(D[b][0]));
+  rlHead.textContent=`Roster · ${idx.length}`;
+  roster.innerHTML='';
+  idx.forEach(i=>{
+    const li=document.createElement('li');
+    li.tabIndex=0; li.className = i===sel?'cur':'';
+    li.innerHTML=`<span><span style="color:${SEC[D[i][4]][1]}">●</span> ${esc(D[i][0])}</span><small>${esc(D[i][1])}</small>`;
+    const go=()=>{ sel = sel===i?-1:i; render(); };
+    li.addEventListener('click',go);
+    li.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();go();} });
+    roster.appendChild(li);
+  });
+}
+
+/* ── wiring ─────────────────────────────────────────── */
+function setView(v){
+  view=v;
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected', b.dataset.v===v?'true':'false'));
+  svg.hidden = v==='m'; mxEl.hidden = v!=='m';
+  render();
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{ sel=-1; setView(b.dataset.v); }));
+qIn.addEventListener('input',()=>{ q=qIn.value.trim().toLowerCase(); sel=-1; render(); });
+document.getElementById('reset').addEventListener('click',()=>{
+  isoSec=isoCty=null; sel=-1; q=''; qIn.value=''; render();
+});
+svg.addEventListener('click',()=>{ if(sel>=0){ sel=-1; render(); } });
+render();
+</script>
+</body>
+</html>
